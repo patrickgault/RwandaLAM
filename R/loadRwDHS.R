@@ -22,6 +22,31 @@
 #'
 #' @export
 #'
+#'
+
+
+# Import/Load packages ----------------------------------------------------
+pkgs = c('dplyr', 'haven', 'tidyr', 'ggplot2', 'readxl')
+
+# Check if packages are installed
+alreadyInstalled = installed.packages()[, "Package"]
+
+toInstall = pkgs[!pkgs %in% alreadyInstalled]
+
+# Install anything that isn't already installed.
+if (length(toInstall > 0)) {
+  print(paste0("Installing these packages: ", toInstall))
+  
+  install.packages(toInstall)
+}
+
+# Load packages
+for (i in seq_along(pkgs)) {
+  library(pkgs[i], character.only = TRUE, quietly = quiet)
+}
+
+
+# Main function to load data ----------------------------------------------
 
 loadRwDHS = function(user = 'Laura',
                      path = NA) {
