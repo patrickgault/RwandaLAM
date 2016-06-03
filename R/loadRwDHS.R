@@ -52,18 +52,32 @@ loadRwDHS = function(user = 'Laura',
                      path = NA) {
   
   # Set up the working directory where the DHS data are locally stored.
+  
+  # Manually override the options
   if (!user %in% c('Laura', 'Tim', 'Nada', 'Patrick')){ # User name isn't recognized
     if(is.na(path)) {
       stop("Path containing data isn't specified.")
+      
     } else {
       path = path # Manually set path
     }
+    
+    # Laura  
   } else if(user == 'Laura') {
     path = '~/GitHub/RwandaLAM/'
+    
+    # Tim  
   } else if(user == 'Tim') {
     path = '~/Users/Tim/Rwanda/'
+    
+  } else if(user == 'Tim_home') {
+    path = '~/Users/Tim/Rwanda/'
+    
+    # Nada
   } else if(user == 'Nada') {
     path = '~/Documents/USAID/Rwanda/'
+    
+    # Patrick
   } else if(user == 'Patrick') {
     path = '~/Documents/USAID/Rwanda/'
   }
