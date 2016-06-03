@@ -46,6 +46,9 @@ for (i in seq_along(pkgs)) {
 }
 
 
+
+
+
 # Main function to load data ----------------------------------------------
 
 loadRwDHS = function(user = 'Laura',
@@ -82,6 +85,9 @@ loadRwDHS = function(user = 'Laura',
     path = '~/Documents/USAID/Rwanda/'
   }
   
+  # Helper functions to deal with labels ------------------------------------
+  source(paste0(path, 'R/attributes.R'))
+  
   
   # Import raw data ---------------------------------------------------------
   
@@ -94,11 +100,10 @@ loadRwDHS = function(user = 'Laura',
   couples = read_dta(paste0(path, 'Datain/RW_2014-15_DHS/rwpr70dt/RWPR70FL.DTA'))
   
   
-  
   # pull out value labels ---------------------------------------------------
-  
+  hh_labels = pullAttributes(hh)
   
   # remove value labels -----------------------------------------------------
-  
-  
+  hh_clean = removeAttributes(hh)  
+
 }
