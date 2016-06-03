@@ -23,7 +23,6 @@
 #' @export
 #'
 #'
-read.csv('~/GitHub/RwandaLAM/')
 
 # Import/Load packages ----------------------------------------------------
 pkgs = c('dplyr', 'haven', 'tidyr', 'ggplot2', 'readxl')
