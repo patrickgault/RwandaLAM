@@ -23,7 +23,7 @@
 #' @export
 #'
 #'
-
+read.csv('~/GitHub/RwandaLAM/')
 
 # Import/Load packages ----------------------------------------------------
 pkgs = c('dplyr', 'haven', 'tidyr', 'ggplot2', 'readxl')
@@ -59,7 +59,7 @@ loadRwDHS = function(user = 'Laura',
       path = path # Manually set path
     }
   } else if(user == 'Laura') {
-    path = '~/Github/Rwanda/'
+    path = '~/GitHub/RwandaLAM/'
   } else if(user == 'Tim') {
     path = '~/Users/Tim/Rwanda/'
   } else if(user == 'Nada') {
@@ -71,13 +71,13 @@ loadRwDHS = function(user = 'Laura',
   
   # Import raw data ---------------------------------------------------------
   
-  hh = read_dta(paste0(path, 'data in/RW_2014-15_DHS/rwhr70dt/RWHR70FL.DTA'))
-  birth = read_dta(paste0(path, 'data in/RW_2014-15_DHS/rwbr70dt/RWBR70FL.DTA'))
-  couples = read_dta(paste0(path, 'data in/RW_2014-15_DHS/rwcr70dt/RWCR70FL.DTA'))
-  women = read_dta(paste0(path, 'data in/RW_2014-15_DHS/rwir70dt/RWIR70FL.DTA'))
-  kids = read_dta(paste0(path, 'data in/RW_2014-15_DHS/rwkr70dt/RWKR70FL.DTA'))
-  men = read_dta(paste0(path, 'data in/RW_2014-15_DHS/rwmr70dt/RWMR70FL.DTA'))
-  couples = read_dta(paste0(path, 'data in/RW_2014-15_DHS/rwpr70dt/RWPR70FL.DTA'))
+  hh = read_dta(paste0(path, 'Datain/RW_2014-15_DHS/rwhr70dt/RWHR70FL.DTA'))
+  birth = read_dta(paste0(path, 'Datain/RW_2014-15_DHS/rwbr70dt/RWBR70FL.DTA'))
+  couples = read_dta(paste0(path, 'Datain/RW_2014-15_DHS/rwcr70dt/RWCR70FL.DTA'))
+  women = read_dta(paste0(path, 'Datain/RW_2014-15_DHS/rwir70dt/RWIR70FL.DTA'))
+  kids = read_dta(paste0(path, 'Datain/RW_2014-15_DHS/rwkr70dt/RWKR70FL.DTA'))
+  men = read_dta(paste0(path, 'Datain/RW_2014-15_DHS/rwmr70dt/RWMR70FL.DTA'))
+  couples = read_dta(paste0(path, 'Datain/RW_2014-15_DHS/rwpr70dt/RWPR70FL.DTA'))
   
   
   
