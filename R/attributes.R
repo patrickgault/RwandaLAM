@@ -26,6 +26,7 @@ pullAttributes <- function(data, type = "label") {
   metadata = lapply(data, function(x) attr(x, type))
   
   metadata = data.frame(metadata)
+  metadata = data.frame(var = colnames(metadata), label = t(metadata))
   
 }
 
