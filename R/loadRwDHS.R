@@ -77,7 +77,7 @@ loadRwDHS = function(user = 'Tim',
 
     # Nada
   } else if(user == 'Nada') {
-    path = '~/Documents/USAID/Rwanda/'
+    path = '~/Documents/GitHub/RwandaLAM/'
 
     # Patrick
   } else if(user == 'Patrick') {
