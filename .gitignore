@@ -20,3 +20,17 @@ vignettes/*.pdf
 .Rproj.user
 
 *.Rproj
+
+*.DCT
+
+*.DO
+
+*.DTA
+
+*.FRQ
+
+*.FRW
+
+*.MAP
+
+*.DOC
