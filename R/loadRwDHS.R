@@ -86,6 +86,8 @@ setRwWD = function(user = 'Tim',
   
   # Helper functions to deal with labels ------------------------------------
   source(paste0(path, 'R/attributes.R'))
+  
+  return(path)
 }  
 
 
