@@ -17,18 +17,19 @@ NULL
 
 #' @describeIn  attr Function to pull any attributes from a data frame.  Useful to cleanup imported Stata files.
 #' @export
-pullAttributes <- function(data, type = "label") {
-  # type should be 'label
-  if (!(type %in% c("label", "labels"))) {
-    warning("Type should be label or labels")
-  }
+pullAttributes <- function(data) {
   
-  metadata = lapply(data, function(x) attr(x, type))
-  
+  metadata = lapply(data, function(x) attr(x, 'label'))
   metadata = data.frame(metadata)
-  metadata = data.frame(var = colnames(metadata), label = t(metadata))
   
+  labels = lapply(data, function(x) attr(x, 'labels'))
+
+  metadata = data.frame(var = colnames(metadata), varDescrip = t(metadata))
+
+  df = mutate(metadata, varValues = labels)
+  return(df)
 }
+
 
 
 #' @describeIn  attr Function to remove any attributes from a data frame.  Useful to cleanup imported Stata files.
