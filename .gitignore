@@ -34,3 +34,23 @@ vignettes/*.pdf
 *.MAP
 
 *.DOC
+
+*.CPG
+
+Datain/RW_2014-15_DHS/rwge71fl/GPS_Displacement_README.txt
+
+Datain/RW_2014-15_DHS/rwge71fl/DHS_README.txt
+
+*.dbf
+
+*.prj
+
+*.sbn
+
+*.sbx
+
+*.shp
+
+Datain/RW_2014-15_DHS/rwge71fl/RWGE71FL.shp.xml
+
+*.shx
