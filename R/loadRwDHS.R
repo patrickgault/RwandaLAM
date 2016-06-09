@@ -91,7 +91,7 @@ setRwWD = function(user = 'Tim',
 }  
 
 
-path = setRwWD(user = 'Laura')
+path = setRwWD(user = 'Nada')
 
 # Import raw data ---------------------------------------------------------
 
