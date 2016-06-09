@@ -51,7 +51,7 @@ for (i in seq_along(pkgs)) {
 # Main function to load data ----------------------------------------------
 
 setRwWD = function(user = 'Tim',
-                     path = NA) {
+                   path = NA) {
   
   # Set up the working directory where the DHS data are locally stored.
   
@@ -82,30 +82,29 @@ setRwWD = function(user = 'Tim',
     # Patrick
   } else if(user == 'Patrick') {
     path = '~/Documents/USAID/Rwanda/'
-    
-    
-    # Helper functions to deal with labels ------------------------------------
-    source(paste0(path, 'R/attributes.R'))
-  }  
+  }
   
-  
-  path = setRwWD(user = 'Laura')
-  
-  # Import raw data ---------------------------------------------------------
-  
-  hh = read_dta(paste0(path, 'Datain/RW_2014-15_DHS/rwhr70dt/RWHR70FL.DTA'))
-  birth = read_dta(paste0(path, 'Datain/RW_2014-15_DHS/rwbr70dt/RWBR70FL.DTA'))
-  couples = read_dta(paste0(path, 'Datain/RW_2014-15_DHS/rwcr70dt/RWCR70FL.DTA'))
-  women = read_dta(paste0(path, 'Datain/RW_2014-15_DHS/rwir70dt/RWIR70FL.DTA'))
-  kids = read_dta(paste0(path, 'Datain/RW_2014-15_DHS/rwkr70dt/RWKR70FL.DTA'))
-  men = read_dta(paste0(path, 'Datain/RW_2014-15_DHS/rwmr70dt/RWMR70FL.DTA'))
-  couples = read_dta(paste0(path, 'Datain/RW_2014-15_DHS/rwpr70dt/RWPR70FL.DTA'))
-  
-  
-  # pull out value labels ---------------------------------------------------
-  hh_labels = pullAttributes(hh)
-  
-  # remove value labels -----------------------------------------------------
-  hh_clean = removeAttributes(hh)
-  
-  
+  # Helper functions to deal with labels ------------------------------------
+  source(paste0(path, 'R/attributes.R'))
+}  
+
+
+path = setRwWD(user = 'Laura')
+
+# Import raw data ---------------------------------------------------------
+
+hh = read_dta(paste0(path, 'Datain/RW_2014-15_DHS/rwhr70dt/RWHR70FL.DTA'))
+birth = read_dta(paste0(path, 'Datain/RW_2014-15_DHS/rwbr70dt/RWBR70FL.DTA'))
+couples = read_dta(paste0(path, 'Datain/RW_2014-15_DHS/rwcr70dt/RWCR70FL.DTA'))
+women = read_dta(paste0(path, 'Datain/RW_2014-15_DHS/rwir70dt/RWIR70FL.DTA'))
+kids = read_dta(paste0(path, 'Datain/RW_2014-15_DHS/rwkr70dt/RWKR70FL.DTA'))
+men = read_dta(paste0(path, 'Datain/RW_2014-15_DHS/rwmr70dt/RWMR70FL.DTA'))
+couples = read_dta(paste0(path, 'Datain/RW_2014-15_DHS/rwpr70dt/RWPR70FL.DTA'))
+
+
+# pull out value labels ---------------------------------------------------
+hh_labels = pullAttributes(hh)
+
+# remove value labels -----------------------------------------------------
+hh_clean = removeAttributes(hh)
+
