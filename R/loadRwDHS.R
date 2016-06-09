@@ -35,7 +35,7 @@ toInstall = pkgs[!pkgs %in% alreadyInstalled]
 # Install anything that isn't already installed.
 if (length(toInstall > 0)) {
   print(paste0("Installing these packages: ", toInstall))
-
+  
   install.packages(toInstall)
 }
 
@@ -50,47 +50,49 @@ for (i in seq_along(pkgs)) {
 
 # Main function to load data ----------------------------------------------
 
-loadRwDHS = function(user = 'Tim',
+setRwWD = function(user = 'Tim',
                      path = NA) {
-
+  
   # Set up the working directory where the DHS data are locally stored.
-
+  
   # Manually override the options
   if (!user %in% c('Laura', 'Tim', 'Nada', 'Patrick')){ # User name isn't recognized
     if(is.na(path)) {
       stop("Path containing data isn't specified.")
-
+      
     } else {
       path = path # Manually set path
     }
-
+    
     # Laura
   } else if(user == 'Laura') {
     path = '~/GitHub/RwandaLAM/'
-
+    
     # Tim
   } else if(user == 'Tim') {
     path = '~/GitHub/RwandaLAM/'
-
+    
   } else if(user == 'Tim_home') {
     path = '~/Users/Tim/Rwanda/'
-
+    
     # Nada
   } else if(user == 'Nada') {
     path = '~/Documents/GitHub/RwandaLAM/'
-
+    
     # Patrick
   } else if(user == 'Patrick') {
     path = '~/Documents/USAID/Rwanda/'
-  }
-
-
-  # Helper functions to deal with labels ------------------------------------
-  source(paste0(path, 'R/attributes.R'))
-
-
+    
+    
+    # Helper functions to deal with labels ------------------------------------
+    source(paste0(path, 'R/attributes.R'))
+  }  
+  
+  
+  path = setRwWD(user = 'Laura')
+  
   # Import raw data ---------------------------------------------------------
-
+  
   hh = read_dta(paste0(path, 'Datain/RW_2014-15_DHS/rwhr70dt/RWHR70FL.DTA'))
   birth = read_dta(paste0(path, 'Datain/RW_2014-15_DHS/rwbr70dt/RWBR70FL.DTA'))
   couples = read_dta(paste0(path, 'Datain/RW_2014-15_DHS/rwcr70dt/RWCR70FL.DTA'))
@@ -98,12 +100,12 @@ loadRwDHS = function(user = 'Tim',
   kids = read_dta(paste0(path, 'Datain/RW_2014-15_DHS/rwkr70dt/RWKR70FL.DTA'))
   men = read_dta(paste0(path, 'Datain/RW_2014-15_DHS/rwmr70dt/RWMR70FL.DTA'))
   couples = read_dta(paste0(path, 'Datain/RW_2014-15_DHS/rwpr70dt/RWPR70FL.DTA'))
-
-
+  
+  
   # pull out value labels ---------------------------------------------------
   hh_labels = pullAttributes(hh)
-
+  
   # remove value labels -----------------------------------------------------
   hh_clean = removeAttributes(hh)
-
-}
+  
+  
