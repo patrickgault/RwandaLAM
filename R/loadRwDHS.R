@@ -101,12 +101,25 @@ couples = read_dta(paste0(path, 'Datain/RW_2014-15_DHS/rwcr70dt/RWCR70FL.DTA'))
 women = read_dta(paste0(path, 'Datain/RW_2014-15_DHS/rwir70dt/RWIR70FL.DTA'))
 kids = read_dta(paste0(path, 'Datain/RW_2014-15_DHS/rwkr70dt/RWKR70FL.DTA'))
 men = read_dta(paste0(path, 'Datain/RW_2014-15_DHS/rwmr70dt/RWMR70FL.DTA'))
-couples = read_dta(paste0(path, 'Datain/RW_2014-15_DHS/rwpr70dt/RWPR70FL.DTA'))
+roster = read_dta(paste0(path, 'Datain/RW_2014-15_DHS/rwpr70dt/RWPR70FL.DTA'))
 
 
 # pull out value labels ---------------------------------------------------
 hh_labels = pullAttributes(hh)
+birth_labels = pullAttributes(birth)
+couples_labels = pullAttributes(couples)
+women_labels = pullAttributes(women)
+kids_labels = pullAttributes(kids)
+men_labels = pullAttributes(men)
+roster_labels = pullAttributes(roster)
 
 # remove value labels -----------------------------------------------------
 hh_clean = removeAttributes(hh)
+birth_clean = removeAttributes(birth)
+couples_clean = removeAttributes(couples)
+women_clean = removeAttributes(women)
+kids_clean = removeAttributes(kids)
+men_clean = removeAttributes(men)
+roster_clean = removeAttributes(roster)
+
 
