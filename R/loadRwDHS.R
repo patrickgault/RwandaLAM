@@ -105,13 +105,16 @@ roster = read_dta(paste0(path, 'Datain/RW_2014-15_DHS/rwpr70dt/RWPR70FL.DTA'))
 
 
 # pull out value labels ---------------------------------------------------
-hh_labels = pullAttributes(hh)
-birth_labels = pullAttributes(birth)
-couples_labels = pullAttributes(couples)
-women_labels = pullAttributes(women)
-kids_labels = pullAttributes(kids)
-men_labels = pullAttributes(men)
-roster_labels = pullAttributes(roster)
+hh_labels = pullAttributes(hh) %>% mutate(module = 'hh')
+birth_labels = pullAttributes(birth) %>% mutate(module = 'birth')
+couples_labels = pullAttributes(couples) %>% mutate(module = 'couples')
+women_labels = pullAttributes(women) %>% mutate(module = 'women')
+kids_labels = pullAttributes(kids) %>% mutate(module = 'kids')
+men_labels = pullAttributes(men) %>% mutate(module = 'men')
+roster_labels = pullAttributes(roster) %>% mutate(module = 'roster')
+
+# combine all labels together in one master list
+labels = bind_rows(hh_labels, birth_labels, couples_labels, women_labels, kids_labels, men_labels, roster_labels)
 
 # remove value labels -----------------------------------------------------
 hh_clean = removeAttributes(hh)
