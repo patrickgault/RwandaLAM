@@ -110,13 +110,26 @@ geo = read.dbf(paste0(path,'Datain/RW_2014-15_DHS/rwge71fl/RWGE71FL.dbf'))
 
 
 # pull out value labels ---------------------------------------------------
-hh_labels = pullAttributes(hh) %>% mutate(module = 'hh', rowNum = row_number())
-birth_labels = pullAttributes(birth) %>% mutate(module = 'birth', rowNum = row_number())
-couples_labels = pullAttributes(couples) %>% mutate(module = 'couples', rowNum = row_number())
-women_labels = pullAttributes(women) %>% mutate(module = 'women', rowNum = row_number())
-kids_labels = pullAttributes(kids) %>% mutate(module = 'kids', rowNum = row_number())
-men_labels = pullAttributes(men) %>% mutate(module = 'men', rowNum = row_number())
-roster_labels = pullAttributes(roster) %>% mutate(module = 'roster', rowNum = row_number())
+hh_labels = pullAttributes(hh) %>% 
+  mutate(module = 'hh', rowNum = row_number()) # Add tags for the data frame name and the row number for each variable
+  
+birth_labels = pullAttributes(birth) %>% 
+  mutate(module = 'birth', rowNum = row_number())
+
+couples_labels = pullAttributes(couples) %>% 
+  mutate(module = 'couples', rowNum = row_number())
+
+women_labels = pullAttributes(women) %>% 
+  mutate(module = 'women', rowNum = row_number())
+
+kids_labels = pullAttributes(kids) %>% 
+  mutate(module = 'kids', rowNum = row_number())
+
+men_labels = pullAttributes(men) %>% 
+  mutate(module = 'men', rowNum = row_number())
+
+roster_labels = pullAttributes(roster) %>% 
+  mutate(module = 'roster', rowNum = row_number())
 
 
 # combine all labels together in one master list
