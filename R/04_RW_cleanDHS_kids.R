@@ -2,28 +2,26 @@
 
 #mutate(kids_clean,kidid=paste(trimws(kids_clean$caseid),kids_clean$midx))
 
-kids_all<-kids_clean
+#kids_clean$kidid<-paste(trimws(kids_all$caseid),kids_all$midx)
 
-kids_clean$kidid<-paste(trimws(kids_all$caseid),kids_all$midx)
+#kids_clean = kids_all %>% 
+ # select(caseid = as.character(kids_labels$var[kids_labels$varDescrip=="case identification"])) 
 
+## All of the variables and what they should be renamed to
+var_subset<-c(
+   "caseid = case identification",
+   "wealth_index = wealth index",
+   "cluster_number = cluster number")
 
+var_subset_descrip<-gsub(".*= ", "", var_subset)
+var_subset_rename<-gsub(" =.*", "", var_subset)
 
-#select(kids_clean, kidid, everything())
+## Check loop if it exists & if there are duplicates
+if(var_subset_descrip)
 
+data_all<-kids_all
+data_labels<-kids_labels
 
-
-
-
-
-#hh_labels_subset<-c(
-#  "case identification -> hhid",
-#   "wealth index -> wealth_index",
-#   "month of interview -> interview_month","year of interview -> interview_year",
-#   "age of head of household -> HH_age", "sex of head of household -> HH_sex", 
-#   "province", "district",
-#   "owns land usable for agriculture -> owns_land", 
-#   "hectares of agricultural land (1 decimal) -> hectares_land")
-
-#hh_subset<-hh_clean[as.character(hh_labels$var[hh_labels$varDescrip %in% gsub(" ->.*", "", #hh_labels_subset)])]
-#names(hh_subset)<-gsub(".*-> ", "", hh_labels_subset)
+kids_clean<-data_all[as.character(data_labels$var[data_labels$varDescrip %in% var_subset_descrip])]
+names(kids_clean)<-var_subset_rename
 
