@@ -31,5 +31,10 @@ hh_clean = hh_clean
 #   summarise(n())
 
 ggplot(hh_clean, aes(x = interview_month)) + 
-  geom_histogram(fill = 'dodgerblue') +
-  theme_bw()
+  stat_bin(binwidth=1, fill = 'dodgerblue', colour = 'white') +   
+  stat_bin(binwidth=1, geom="text", aes(label=..count..), vjust=-1.2) + 
+  scale_x_continuous(limits = c(0, 13),
+                     breaks = seq(0,12, by = 2)) +
+  theme_bw() + 
+  ylab('') +
+  ggtitle('Number of households interviewed by month')
