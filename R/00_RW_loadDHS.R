@@ -132,16 +132,16 @@ roster_labels = pullAttributes(roster) %>%
   mutate(module = 'roster', rowNum = row_number())
 
 
-# combine all labels together in one master list
-labels = bind_rows(hh_labels, birth_labels, couples_labels, women_labels, kids_labels, men_labels, roster_labels)
+# combine all labels together in one master list, note couples_labels is currently not included
+labels = bind_rows(hh_labels, birth_labels, women_labels, kids_labels, men_labels, roster_labels)
 
 # remove value labels -----------------------------------------------------
-hh_clean = removeAttributes(hh)
-birth_clean = removeAttributes(birth)
+hh_all = removeAttributes(hh)
+birth_all = removeAttributes(birth)
 # couples_clean = removeAttributes(couples)
-women_clean = removeAttributes(women)
-kids_clean = removeAttributes(kids)
-men_clean = removeAttributes(men)
-roster_clean = removeAttributes(roster)
+women_all = removeAttributes(women)
+kids_all = removeAttributes(kids)
+men_all = removeAttributes(men)
+roster_all = removeAttributes(roster)
 
 
