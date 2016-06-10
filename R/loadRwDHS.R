@@ -101,7 +101,7 @@ path = setRwWD(user = 'Nada')
 
 hh = read_dta(paste0(path, 'Datain/RW_2014-15_DHS/rwhr70dt/RWHR70FL.DTA'))
 birth = read_dta(paste0(path, 'Datain/RW_2014-15_DHS/rwbr70dt/RWBR70FL.DTA'))
-couples = read_dta(paste0(path, 'Datain/RW_2014-15_DHS/rwcr70dt/RWCR70FL.DTA'))
+# couples = read_dta(paste0(path, 'Datain/RW_2014-15_DHS/rwcr70dt/RWCR70FL.DTA')) # Duplicate info from womens/mens mods
 women = read_dta(paste0(path, 'Datain/RW_2014-15_DHS/rwir70dt/RWIR70FL.DTA'))
 kids = read_dta(paste0(path, 'Datain/RW_2014-15_DHS/rwkr70dt/RWKR70FL.DTA'))
 men = read_dta(paste0(path, 'Datain/RW_2014-15_DHS/rwmr70dt/RWMR70FL.DTA'))
@@ -116,8 +116,8 @@ hh_labels = pullAttributes(hh) %>%
 birth_labels = pullAttributes(birth) %>% 
   mutate(module = 'birth', rowNum = row_number())
 
-couples_labels = pullAttributes(couples) %>% 
-  mutate(module = 'couples', rowNum = row_number())
+# couples_labels = pullAttributes(couples) %>% 
+  # mutate(module = 'couples', rowNum = row_number())
 
 women_labels = pullAttributes(women) %>% 
   mutate(module = 'women', rowNum = row_number())
@@ -138,7 +138,7 @@ labels = bind_rows(hh_labels, birth_labels, couples_labels, women_labels, kids_l
 # remove value labels -----------------------------------------------------
 hh_clean = removeAttributes(hh)
 birth_clean = removeAttributes(birth)
-couples_clean = removeAttributes(couples)
+# couples_clean = removeAttributes(couples)
 women_clean = removeAttributes(women)
 kids_clean = removeAttributes(kids)
 men_clean = removeAttributes(men)

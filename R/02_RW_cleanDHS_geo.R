@@ -4,9 +4,6 @@
 # (c) 2016 via MIT License
 
 
-# load raw data -----------------------------------------------------------
-source(loadRwDHS.R)
-
 
 # select relevant variables -----------------------------------------------
 
