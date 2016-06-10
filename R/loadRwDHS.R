@@ -56,7 +56,7 @@ setRwWD = function(user = 'Tim',
   # Set up the working directory where the DHS data are locally stored.
   
   # Manually override the options
-  if (!user %in% c('Laura', 'Tim', 'Nada', 'Patrick')){ # User name isn't recognized
+  if (!user %in% c('Laura', 'Tim', 'Nada', 'Patrick','Craig')){ # User name isn't recognized
     if(is.na(path)) {
       stop("Path containing data isn't specified.")
       
@@ -82,6 +82,10 @@ setRwWD = function(user = 'Tim',
     # Patrick
   } else if(user == 'Patrick') {
     path = '~/Documents/USAID/Rwanda/'
+
+    # Craig
+  } else if(user == 'Craig') {
+    path = 'C:/Users/Craig/Desktop/Live Projects/Rwanda/'
   }
   
   # Helper functions to deal with labels ------------------------------------
@@ -102,7 +106,7 @@ women = read_dta(paste0(path, 'Datain/RW_2014-15_DHS/rwir70dt/RWIR70FL.DTA'))
 kids = read_dta(paste0(path, 'Datain/RW_2014-15_DHS/rwkr70dt/RWKR70FL.DTA'))
 men = read_dta(paste0(path, 'Datain/RW_2014-15_DHS/rwmr70dt/RWMR70FL.DTA'))
 roster = read_dta(paste0(path, 'Datain/RW_2014-15_DHS/rwpr70dt/RWPR70FL.DTA'))
-geo = read.dbf('~/GitHub/RwandaLAM/Datain/RW_2014-15_DHS/rwge71fl/RWGE71FL.dbf')
+geo = read.dbf(paste0(path,'Datain/RW_2014-15_DHS/rwge71fl/RWGE71FL.dbf'))
 
 
 # pull out value labels ---------------------------------------------------
