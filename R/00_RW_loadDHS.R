@@ -100,7 +100,7 @@ path = setRwWD(user = 'Nada')
 # Import raw data ---------------------------------------------------------
 
 hh = read_dta(paste0(path, 'Datain/RW_2014-15_DHS/rwhr70dt/RWHR70FL.DTA'))
-birth = read_dta(paste0(path, 'Datain/RW_2014-15_DHS/rwbr70dt/RWBR70FL.DTA'))
+# birth = read_dta(paste0(path, 'Datain/RW_2014-15_DHS/rwbr70dt/RWBR70FL.DTA')) # Duplicate info from other mods
 # couples = read_dta(paste0(path, 'Datain/RW_2014-15_DHS/rwcr70dt/RWCR70FL.DTA')) # Duplicate info from womens/mens mods
 women = read_dta(paste0(path, 'Datain/RW_2014-15_DHS/rwir70dt/RWIR70FL.DTA'))
 kids = read_dta(paste0(path, 'Datain/RW_2014-15_DHS/rwkr70dt/RWKR70FL.DTA'))
@@ -113,8 +113,8 @@ geo = read.dbf(paste0(path,'Datain/RW_2014-15_DHS/rwge71fl/RWGE71FL.dbf'))
 hh_labels = pullAttributes(hh) %>% 
   mutate(module = 'hh', rowNum = row_number()) # Add tags for the data frame name and the row number for each variable
   
-birth_labels = pullAttributes(birth) %>% 
-  mutate(module = 'birth', rowNum = row_number())
+# birth_labels = pullAttributes(birth) %>% 
+  # mutate(module = 'birth', rowNum = row_number())
 
 # couples_labels = pullAttributes(couples) %>% 
   # mutate(module = 'couples', rowNum = row_number())
@@ -136,7 +136,7 @@ labels = bind_rows(hh_labels, birth_labels, women_labels, kids_labels, men_label
 
 # remove value labels -----------------------------------------------------
 hh_all = removeAttributes(hh)
-birth_all = removeAttributes(birth)
+# birth_all = removeAttributes(birth)
 # couples_clean = removeAttributes(couples)
 women_all = removeAttributes(women)
 kids_all = removeAttributes(kids)
