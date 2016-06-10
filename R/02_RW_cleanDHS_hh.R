@@ -11,12 +11,35 @@ hh_clean = hh %>%
   select(hhid,
          cluster_id = hv001,
          hh_num = hv002,
+         
+         num_hh = hv012, # de jure members
+         num_females15_49 = hv010, # number of 'eligible' women: women 15-49 who slept in house previous night (irrespective of whetehr live or visit)
+         num_males = hv011, # number of 'eligible' men: men 15-49 who slept in house previous night (irrespective of whetehr live or visit)
+         num_under5 = hv014,
+         
          hh_weight = hv005,
+         male_weight = hv028,
+         sample_strata = hv022,
+         
          interview_month = hv006,
          interview_year = hv007,
          interview_cmc = hv008, # interview in century-month-code
-         interview_day = hv016
-         )
+         interview_day = hv016,
+         interviewer_id = hv018,
+         
+         province_id = hv024,
+         urban = hv025
+         
+         ) %>% 
+  mutate(
+    # -- Convert sampling rates to appropriate value --
+    
+    # -- Recode --
+    urban = ifelse(urban == 1, TRUE, # recode rural category to be binary (1 if rural, 0 if urban)
+                        ifelse(urban == 2, FALSE,
+                               NA)),
+    rural = !urban
+    )
 
 
 # WASH indicators ---------------------------------------------------------
@@ -25,6 +48,7 @@ hh_clean = hh_clean
 
 
 # Exploratory descriptive stats -------------------------------------------
+
 # -- distribution of sampling dates --
 # hh_clean %>% 
 #   group_by(interview_month) %>% 
