@@ -18,7 +18,7 @@
 
 
 # (0) load raw data -----------------------------------------------------------
-source(loadRwDHS.R)
+source(file = 'R/00_RW_loadDHS.R')
 
 
 # (2) household variables -------------------------------------------------
