@@ -1,6 +1,14 @@
 source('loadRwDHS.R')
 
 ###############################################################################
+# I find myself needing this a lot
+###############################################################################
+get_label <- function(df,labels,var,value) {
+  lab <- labels[labels$var == var,'varValues'][[1]]
+  names(lab)[which(lab==value)]
+}
+
+###############################################################################
 # Simple visualization functions
 ###############################################################################
 categ_bars <- function(df,labels,var) {
@@ -25,9 +33,6 @@ multi_var_bars <- function(df,labels,vars) {
     geom_bar(stat='identity') + 
     coord_flip() 
 }
-
-
-
 
 ###############################################################################
 # Explore the WASH-relevant variables in hh (Household-level)
@@ -71,3 +76,40 @@ categ_bars(hh,hh_labels,'sh106c')
 
 # sh109aa-c - cleanliness of toilet facility
 multi_var_bars(hh,hh_labels,c('sh109aa','sh109ab','sh109ac'))
+
+###############################################################################
+# Explore the WASH-relevant variables in kids
+###############################################################################
+
+# v116 - type of toilet facility
+categ_bars(kids,kids_labels,'v116')
+# same basic story as in hh
+
+# v113 - source of drinking water
+categ_bars(kids,kids_labels,'v113')
+
+# v465 - disposal of youngest child's stool
+categ_bars(kids,kids_labels,'v465')
+
+###############################################################################
+# Correlations with height-age z-scores?
+###############################################################################
+
+tmp <- kids_clean[,c('v113','hw5')]
+tmp[tmp==9998] <- NA
+tmp <- na.omit(tmp)
+
+df <- ddply(tmp,'v113',summarise,avg_z=mean(hw5))
+df$label <- sapply(df$v113, function(x) get_label(kids,kids_labels,'v113',x))
+df$pval <- sapply(df$v113, function(x) 
+  t.test(tmp[tmp$v113==x,'hw5'],tmp[tmp$v113!=x,'hw5'])$p.value)
+df$sig <- df$pval < 0.05/nrow(df)
+ggplot(df,aes(x=label,y=avg_z)) +
+  geom_bar(stat='identity',aes(fill=sig)) + 
+  geom_hline(yintercept = mean(tmp$hw5)) +
+  coord_flip()
+
+# So kids who get their water from a protected or 
+# unprotected spring are more stunted than average, while
+# those who have it piped into their yard or dwelling
+# are less stunted than average.
