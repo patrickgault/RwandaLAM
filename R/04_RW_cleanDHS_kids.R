@@ -7,6 +7,9 @@
 #kids_clean = kids_all %>% 
  # select(caseid = as.character(kids_labels$var[kids_labels$varDescrip=="case identification"])) 
 
+kids_labels_tokeep<-read_excel('Documents/GitHub/RwandaLAM/Excel/kids_labels_tokeep.xlsx')
+
+
 ## All of the variables and what they should be renamed to
 var_subset<-c(
    "caseid = case identification",
