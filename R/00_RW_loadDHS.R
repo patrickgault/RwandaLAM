@@ -25,7 +25,7 @@
 #'
 
 # Import/Load packages ----------------------------------------------------
-pkgs = c('dplyr', 'haven', 'tidyr', 'ggplot2', 'readxl', 'foreign')
+pkgs = c('dplyr', 'haven', 'tidyr', 'ggplot2', 'readxl', 'foreign', 'data.table', 'stringr')
 
 # Check if packages are installed
 alreadyInstalled = installed.packages()[, "Package"]
@@ -95,13 +95,13 @@ setRwWD = function(user = 'Tim',
 }  
 
 
-path = setRwWD(user = 'Laura')
+path = setRwWD(user = 'Nada')
 
 # Import raw data ---------------------------------------------------------
 
 hh = read_dta(paste0(path, 'Datain/RW_2014-15_DHS/rwhr70dt/RWHR70FL.DTA'))
-birth = read_dta(paste0(path, 'Datain/RW_2014-15_DHS/rwbr70dt/RWBR70FL.DTA'))
-couples = read_dta(paste0(path, 'Datain/RW_2014-15_DHS/rwcr70dt/RWCR70FL.DTA'))
+# birth = read_dta(paste0(path, 'Datain/RW_2014-15_DHS/rwbr70dt/RWBR70FL.DTA')) # Duplicate info from other mods
+# couples = read_dta(paste0(path, 'Datain/RW_2014-15_DHS/rwcr70dt/RWCR70FL.DTA')) # Duplicate info from womens/mens mods
 women = read_dta(paste0(path, 'Datain/RW_2014-15_DHS/rwir70dt/RWIR70FL.DTA'))
 kids = read_dta(paste0(path, 'Datain/RW_2014-15_DHS/rwkr70dt/RWKR70FL.DTA'))
 men = read_dta(paste0(path, 'Datain/RW_2014-15_DHS/rwmr70dt/RWMR70FL.DTA'))
@@ -110,24 +110,37 @@ geo = read.dbf(paste0(path,'Datain/RW_2014-15_DHS/rwge71fl/RWGE71FL.dbf'))
 
 
 # pull out value labels ---------------------------------------------------
-hh_labels = pullAttributes(hh) %>% mutate(module = 'hh')
-birth_labels = pullAttributes(birth) %>% mutate(module = 'birth')
-couples_labels = pullAttributes(couples) %>% mutate(module = 'couples')
-women_labels = pullAttributes(women) %>% mutate(module = 'women')
-kids_labels = pullAttributes(kids) %>% mutate(module = 'kids')
-men_labels = pullAttributes(men) %>% mutate(module = 'men')
-roster_labels = pullAttributes(roster) %>% mutate(module = 'roster')
+hh_labels = pullAttributes(hh) %>% 
+  mutate(module = 'hh', rowNum = row_number()) # Add tags for the data frame name and the row number for each variable
+  
+# birth_labels = pullAttributes(birth) %>% 
+  # mutate(module = 'birth', rowNum = row_number())
 
-# combine all labels together in one master list
-labels = bind_rows(hh_labels, birth_labels, couples_labels, women_labels, kids_labels, men_labels, roster_labels)
+# couples_labels = pullAttributes(couples) %>% 
+  # mutate(module = 'couples', rowNum = row_number())
+
+women_labels = pullAttributes(women) %>% 
+  mutate(module = 'women', rowNum = row_number())
+
+kids_labels = pullAttributes(kids) %>% 
+  mutate(module = 'kids', rowNum = row_number())
+
+men_labels = pullAttributes(men) %>% 
+  mutate(module = 'men', rowNum = row_number())
+
+roster_labels = pullAttributes(roster) %>% 
+  mutate(module = 'roster', rowNum = row_number())
+
+# combine all labels together in one master list, note couples_labels is currently not included
+labels = bind_rows(hh_labels, birth_labels, women_labels, kids_labels, men_labels, roster_labels)
 
 # remove value labels -----------------------------------------------------
-hh_clean = removeAttributes(hh)
-birth_clean = removeAttributes(birth)
-couples_clean = removeAttributes(couples)
-women_clean = removeAttributes(women)
-kids_clean = removeAttributes(kids)
-men_clean = removeAttributes(men)
-roster_clean = removeAttributes(roster)
+hh_all = removeAttributes(hh)
+# birth_all = removeAttributes(birth)
+# couples_clean = removeAttributes(couples)
+women_all = removeAttributes(women)
+kids_all = removeAttributes(kids)
+men_all = removeAttributes(men)
+roster_all = removeAttributes(roster)
 
 
