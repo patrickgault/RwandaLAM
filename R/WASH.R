@@ -113,3 +113,22 @@ ggplot(df,aes(x=label,y=avg_z)) +
 # unprotected spring are more stunted than average, while
 # those who have it piped into their yard or dwelling
 # are less stunted than average.
+
+###############################################################################
+# Water and wealth?
+###############################################################################
+tmp2 <- hh_clean[,c('hv201','hv271')]
+tmp2 <- na.omit(tmp2)
+tmp2 <- tmp2[tmp2$hv201 != 61,] # only one observation
+df2 <- ddply(tmp2,'hv201',summarise,wealth=mean(hv271))
+df2$label <- sapply(df2$hv201, function(x) get_label(hh,hh_labels,'hv201',x))
+df2$pval <- sapply(df2$hv201, function(x) 
+  t.test(tmp2[tmp2$hv201==x,'hv271'],tmp2[tmp2$hv201!=x,'hv271'])$p.value)
+df2$sig <- df2$pval < 0.05/nrow(df2)
+ggplot(df2,aes(x=label,y=wealth)) +
+  geom_bar(stat='identity',aes(fill=sig)) + 
+  geom_hline(yintercept = mean(tmp2$hv271)) +
+  coord_flip()
+
+# TODO: I need a way to correlate stunting of kids with some of the WASH-related
+# 
