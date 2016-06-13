@@ -44,7 +44,33 @@ hh_clean = hh %>%
 
 # WASH indicators ---------------------------------------------------------
 # @cjolley: want to give it a go?
-hh_clean = hh_clean
+hh_wash <- hh %>%
+  select(
+    hhid,
+    water_source = hv201,         # source of drinking water
+    water_treat = hv237,          # anything done to treat water?
+    water_treat_boil = hv237a,    # usually treat water by boiling?
+    water_treat_bleach = hv237b,  # usually treat water with bleach/chlorine?
+    water_treat_cloth = hv237c,   # usually treat water by straining through 
+                                  # cloth?
+    water_treat_filter = hv237d,  # usually treat water with a filter?
+    water_treat_solar = hv237e,   # usually treat water by solar disinfection?
+    water_treat_settle = hv237f,  # usually treat water by letting stand and 
+                                  # settle?
+    container_wash = sh106c,      # frequency of washing water containers
+    
+    handwashing_site = hv230a,    # type of handwashing site
+    handwashing_water = hv230b,   # water observed at handwashing site?
+    has_soap = hv232,             # was soap/detergent observed?
+    
+    toilet_type = hv205,          # type of toilet facility
+    toilet_clean_dry = sh109aa,   # toilet dry and clean
+    toilet_clean_urine = sh109ab, # toilet has urine and excreta
+    toilet_clean_flies = sh109ac  # toilet has flies
+  )
+
+hh_clean <- cbind(hh_clean,hh_wash)
+
 
 
 # Exploratory descriptive stats -------------------------------------------
