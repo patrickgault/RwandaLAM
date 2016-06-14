@@ -43,10 +43,13 @@ hh_clean = hh %>%
 
 
 # WASH indicators ---------------------------------------------------------
-# @cjolley: want to give it a go?
+
+binary10 <- function(x) {
+  ifelse(x==1,TRUE,ifelse(x==0,FALSE,NA))
+}
+
 hh_wash <- hh %>%
   select(
-    hhid,
     water_source = hv201,         # source of drinking water
     water_treat = hv237,          # anything done to treat water?
     water_treat_boil = hv237a,    # usually treat water by boiling?
@@ -67,7 +70,25 @@ hh_wash <- hh %>%
     toilet_clean_dry = sh109aa,   # toilet dry and clean
     toilet_clean_urine = sh109ab, # toilet has urine and excreta
     toilet_clean_flies = sh109ac  # toilet has flies
+  ) %>% mutate(
+    # -- Recode "don't know" answers as NA --
+    water_treat = binary10(water_treat),
+    water_treat_boil = binary10(water_treat_boil),
+    water_treat_bleach = binary10(water_treat_bleach),
+    water_treat_cloth = binary10(water_treat_cloth),
+    water_treat_filter = binary10(water_treat_filter),
+    water_treat_solar = binary10(water_treat_solar),
+    water_treat_settle = binary10(water_treat_settle),
+    container_wash = ifelse(container_wash < 8,container_wash,NA)
   )
+attr(hh_wash$water_treat,'label')        <- attr(hh$hv237,'label')
+attr(hh_wash$water_treat_boil,'label')   <- attr(hh$hv237a,'label')
+attr(hh_wash$water_treat_bleach,'label') <- attr(hh$hv237b,'label')
+attr(hh_wash$water_treat_cloth,'label')  <- attr(hh$hv237c,'label')
+attr(hh_wash$water_treat_filter,'label') <- attr(hh$hv237d,'label')
+attr(hh_wash$water_treat_solar,'label')  <- attr(hh$hv237e,'label')
+attr(hh_wash$water_treat_settle,'label') <- attr(hh$hv237f,'label')
+
 
 hh_clean <- cbind(hh_clean,hh_wash)
 
