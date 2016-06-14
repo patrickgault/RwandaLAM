@@ -1,20 +1,16 @@
-source('loadRwDHS.R')
-
-###############################################################################
-# I find myself needing this a lot
-###############################################################################
-get_label <- function(df,labels,var,value) {
-  lab <- labels[labels$var == var,'varValues'][[1]]
-  names(lab)[which(lab==value)]
-}
+source('R/01_RW_cleanDHS.R')
 
 ###############################################################################
 # Simple visualization functions
 ###############################################################################
-categ_bars <- function(df,labels,var) {
+categ_bars <- function(df,var) {
   t <- table(df[,var]) %>% as.data.frame(.,stringsAsFactors=FALSE)
   t$Var1 <- as.integer(t$Var1)
-  lab <- labels[labels$var == var,'varValues'][[1]]
+  lab <- attr(df[1,var],'label')
+  if (is.null(lab)) {
+    lab <- t$Var1
+    names(lab) <- as.character(lab)
+  }
   t$label <- names(lab)[match(t$Var1,lab)]
   t[is.na(t$label),'label'] <- as.character(t[is.na(t$label),'Var1'])
   print(t)
@@ -23,9 +19,11 @@ categ_bars <- function(df,labels,var) {
     coord_flip()   
 }
 
-
-multi_var_bars <- function(df,labels,vars) {
-  lab <- sapply(vars, function(x) labels[labels$var==x,'varDescrip']) %>%
+###############################################################################
+# Show the 'yes' values of several yes/no variables all in one place
+###############################################################################
+multi_var_bars <- function(df,vars) {
+  lab <- sapply(vars, function(x) attr(df[,x],'label')) %>%
     as.character()
   plotme <- data.frame(var=vars,label=lab,
                    val=sapply(vars,function(x) mean(df[,x]==1,na.rm=TRUE)))
@@ -37,98 +35,33 @@ multi_var_bars <- function(df,labels,vars) {
 ###############################################################################
 # Explore the WASH-relevant variables in hh (Household-level)
 ###############################################################################
-# hv201 - source of drinking (and non-drinking) water
-categ_bars(hh,hh_labels,'hv201')
-# Most prevalent are protected springs, public taps/standpipes, unprotected 
-# springs
+
+# hv201 - source of drinking  water
+categ_bars(hh_clean,'water_source')
+# Most prevalent are protected springs, public taps/standpipes
 
 # hv205 - type of toilet facility
-categ_bars(hh,hh_labels,'hv205')
+categ_bars(hh_clean,'toilet_type')
 # Pit latrines with and without slabs are the most popular
 
 # hv230a - place where hands are washed
-categ_bars(hh,hh_labels,'hv230a')
+categ_bars(hh_clean,'handwashing_site')
 # Most common for handwashing site not to be observed in dwelling
 
 # hv230b - presence of water at hand-washing place
-mean(hh$hv230b,na.rm=TRUE)  #  54.7% have water
+mean(hh_clean$handwashing_water,na.rm=TRUE)  #  54.7% have water
 
 # hv232 - items present: soap/detergent
-mean(hh$hv232,na.rm=TRUE)  #  54% have soap
+mean(hh_clean$has_soap,na.rm=TRUE)  #  54% have soap
 
-# hv235 - location of source for water
-categ_bars(hh,hh_labels,'hv235')
-# This one is probably too uniform to be very useful
-
-# hv237 (a-f) - water purification methods
-multi_var_bars(hh,hh_labels,
-               c('hv237','hv237a','hv237b','hv237c','hv237d','hv237e','hv237f'))
-
-# hv225 - share toilet with other households
-mean(hh$hv225,na.rm=TRUE)  #  23.3% share
-
-# hv238 - number of households sharing toilet
-categ_bars(hh,hh_labels,'hv238')
-# among those who share, most share with only one other household
+# water purification methods
+multi_var_bars(hh_clean,
+               c('water_treat','water_treat_boil','water_treat_bleach',
+                 'water_treat_filter','water_treat_solar','water_treat_settle'))
 
 # sh106c - frequency of washing water containers in a week
-categ_bars(hh,hh_labels,'sh106c')
+categ_bars(hh_clean,'container_wash')
 
 # sh109aa-c - cleanliness of toilet facility
-multi_var_bars(hh,hh_labels,c('sh109aa','sh109ab','sh109ac'))
+multi_var_bars(hh_clean,c('toilet_clean_dry','toilet_clean_urine','toilet_clean_flies'))
 
-###############################################################################
-# Explore the WASH-relevant variables in kids
-###############################################################################
-
-# v116 - type of toilet facility
-categ_bars(kids,kids_labels,'v116')
-# same basic story as in hh
-
-# v113 - source of drinking water
-categ_bars(kids,kids_labels,'v113')
-
-# v465 - disposal of youngest child's stool
-categ_bars(kids,kids_labels,'v465')
-
-###############################################################################
-# Correlations with height-age z-scores?
-###############################################################################
-
-tmp <- kids_clean[,c('v113','hw5')]
-tmp[tmp==9998] <- NA
-tmp <- na.omit(tmp)
-
-df <- ddply(tmp,'v113',summarise,avg_z=mean(hw5))
-df$label <- sapply(df$v113, function(x) get_label(kids,kids_labels,'v113',x))
-df$pval <- sapply(df$v113, function(x) 
-  t.test(tmp[tmp$v113==x,'hw5'],tmp[tmp$v113!=x,'hw5'])$p.value)
-df$sig <- df$pval < 0.05/nrow(df)
-ggplot(df,aes(x=label,y=avg_z)) +
-  geom_bar(stat='identity',aes(fill=sig)) + 
-  geom_hline(yintercept = mean(tmp$hw5)) +
-  coord_flip()
-
-# So kids who get their water from a protected or 
-# unprotected spring are more stunted than average, while
-# those who have it piped into their yard or dwelling
-# are less stunted than average.
-
-###############################################################################
-# Water and wealth?
-###############################################################################
-tmp2 <- hh_clean[,c('hv201','hv271')]
-tmp2 <- na.omit(tmp2)
-tmp2 <- tmp2[tmp2$hv201 != 61,] # only one observation
-df2 <- ddply(tmp2,'hv201',summarise,wealth=mean(hv271))
-df2$label <- sapply(df2$hv201, function(x) get_label(hh,hh_labels,'hv201',x))
-df2$pval <- sapply(df2$hv201, function(x) 
-  t.test(tmp2[tmp2$hv201==x,'hv271'],tmp2[tmp2$hv201!=x,'hv271'])$p.value)
-df2$sig <- df2$pval < 0.05/nrow(df2)
-ggplot(df2,aes(x=label,y=wealth)) +
-  geom_bar(stat='identity',aes(fill=sig)) + 
-  geom_hline(yintercept = mean(tmp2$hv271)) +
-  coord_flip()
-
-# TODO: I need a way to correlate stunting of kids with some of the WASH-related
-# 
