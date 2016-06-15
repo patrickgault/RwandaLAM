@@ -1,7 +1,14 @@
 source('R/01_RW_cleanDHS.R')
 
+require("rgdal") 
+require("maptools")
+require(plyr)
+require(dplyr)
+require(ggplot2)
+library(llamar)
+
 ###############################################################################
-# Simple visualization functions
+# Bar plot for categorical variables
 ###############################################################################
 categ_bars <- function(df,var) {
   t <- table(df[,var]) %>% as.data.frame(.,stringsAsFactors=FALSE)
@@ -33,6 +40,35 @@ multi_var_bars <- function(df,vars) {
 }
 
 ###############################################################################
+# Admin-2 choropleth maps
+###############################################################################
+adm2_map <- function(df,x) {
+  tmp <- df[,c('cluster_id',x)]
+  names(tmp)[2] <- 'val'
+  adm2_avg <- tmp %>% 
+    join(geo_clean,by='cluster_id') %>%
+    group_by(district) %>%
+    summarise(val=mean(val,na.rm=TRUE)) %>%
+    mutate(NAME_2=as.character(district)) 
+  plotme <- join(rwanda.adm2,adm2_avg,by='NAME_2')
+  ggplot(plotme) +
+    aes(long,lat,group=group,fill=val) +
+    geom_polygon() +
+    geom_path(color='gray45') +
+    coord_equal() +
+    scale_fill_continuous(low='ivory',high='olivedrab') +
+    ggtitle(attr(df[,x],'label')) +
+    theme(axis.title = element_blank(), 
+          axis.text = element_blank(), axis.ticks = element_blank(), 
+          axis.ticks.length = unit(0, units = "points"), panel.border = element_blank(), 
+          panel.grid = element_blank(), panel.background = element_blank(), 
+          plot.background = element_blank())
+}
+
+# TODO: Need a good way of mapping categorical variables, either with small
+# multiples or majority coloring.
+
+###############################################################################
 # Explore the WASH-relevant variables in hh (Household-level)
 ###############################################################################
 
@@ -50,18 +86,28 @@ categ_bars(hh_clean,'handwashing_site')
 
 # hv230b - presence of water at hand-washing place
 mean(hh_clean$handwashing_water,na.rm=TRUE)  #  54.7% have water
+adm2_map(hh_clean,'handwashing_water')
 
 # hv232 - items present: soap/detergent
 mean(hh_clean$has_soap,na.rm=TRUE)  #  54% have soap
+adm2_map(hh_clean,'has_soap')
 
 # water purification methods
 multi_var_bars(hh_clean,
                c('water_treat','water_treat_boil','water_treat_bleach',
                  'water_treat_filter','water_treat_solar','water_treat_settle'))
+adm2_map(hh_clean,'water_treat')
+adm2_map(hh_clean,'water_treat_bleach')
+adm2_map(hh_clean,'water_treat_filter') 
+# water filters seem only to be popular in the west
 
 # sh106c - frequency of washing water containers in a week
 categ_bars(hh_clean,'container_wash')
 
 # sh109aa-c - cleanliness of toilet facility
 multi_var_bars(hh_clean,c('toilet_clean_dry','toilet_clean_urine','toilet_clean_flies'))
+adm2_map(hh_clean,'toilet_clean_dry')
+# the northwest seems to be home to Rwanda's grossest toilets
+adm2_map(hh_clean,'toilet_clean_urine')
+adm2_map(hh_clean,'toilet_clean_flies')
 
