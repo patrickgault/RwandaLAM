@@ -95,7 +95,7 @@ setRwWD = function(user = 'Tim',
 }  
 
 
-path = setRwWD(user = 'Nada')
+path = setRwWD(user = 'Craig')
 
 # Import raw data ---------------------------------------------------------
 
@@ -132,7 +132,8 @@ roster_labels = pullAttributes(roster) %>%
   mutate(module = 'roster', rowNum = row_number())
 
 # combine all labels together in one master list, note couples_labels is currently not included
-labels = bind_rows(hh_labels, birth_labels, women_labels, kids_labels, men_labels, roster_labels)
+#labels = bind_rows(hh_labels, birth_labels, women_labels, kids_labels, men_labels, roster_labels)
+labels = bind_rows(hh_labels, women_labels, kids_labels, men_labels, roster_labels)
 
 # remove value labels -----------------------------------------------------
 hh_all = removeAttributes(hh)
