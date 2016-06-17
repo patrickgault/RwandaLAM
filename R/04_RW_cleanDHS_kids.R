@@ -19,25 +19,70 @@ data_rename_vars<-kids_labels_tokeep$renamedVar[kids_labels_tokeep$Keep==1]
 kids_clean<-kids_all[data_subset_vars]
 names(kids_clean)<-data_rename_vars
 
+### Calculate age by subtracting 
+kids_clean$age_calc_months<-kids_clean$interview_date_cmc-kids_clean$dob_cmc
+
+## Note Max is 59 months, ie only children <5
+
 ## Checking if "gave child" variables vary by child, by seeing if the sum total
 ## of all the food variables + caseid has more uniqueness than caseid alone
-kids_clean$child_food_tot<-rowSums(select(kids_diet,contains("child")),na.rm=TRUE)
-length(unique(kids_diet$caseid))
+child_food_tot<-rowSums(select(kids_clean,contains("child")),na.rm=TRUE)
+length(unique(kids_clean$caseid))
 ## Output: [1] 5955
-length(unique(paste(kids_diet$caseid,kids_diet$child_food_tot)))
+length(unique(paste(kids_diet$caseid,child_food_tot)))
 ## Output: [1] 5955
 ## It does not seem to vary per child
 
-# Wording of question: "Now I would like to ask you about liquids or foods that (NAME FROM 649) #had yesterday during the day or at night. I am interested in whether your child had the #item I mention even if it was #combined with other foods.
+# Wording of question: "Now I would like to ask you about liquids or foods #that (NAME FROM 649) had yesterday during the day or at night. 
+#I am interested in whether your child had the #item I mention even if it was #combined with other foods.
 #Did (NAME FROM 649) drink or eat:
-# Where 649 refers to question about "Youngest child living with her born between 2013 and #2015"
+# Where 649 refers to question about "Youngest child living with her born #between 2013 and #2015"
 
-### Calculate age by subtracting 
+kids_diet<-select(kids_clean,contains("child"),-child_other_food)
 
-kids_clean$age_calc<-kids_clean$doi-kids_clean$dob_cmc
+## Checking if there are rows with NAs in some but not all entries
+table(rowSums(is.na(kids_diet)))
+#Output:
+#   0    1    3   13 
+#4535   47    1 3273 
+
+##Indeces of the rows that are all NAs
+rows_allNAs<-rowSums(is.na(kids_diet))==13
+
+## To avoid removing those that only have a couple missing, will put back in rows that are ## all NAs at the end
+kids_diet[is.na(kids_diet)]<-0
+
+## Calculate WDDS
+
+## Starchy Staples
+DietDiv<-(kids_diet$child_tubers+kids_diet$child_cereals)>0 
+## Dark Green leafy vegetables
+DietDiv<-DietDiv+kids_diet$child_veg_dark_green 
+## Other Vitamin A rich fruit & veg
+DietDiv<-DietDiv+((kids_diet$child_veg_yellow_orange+kids_diet$child_fruit_vit_a)>0)
+## Other Fruit & Veg
+DietDiv<-DietDiv+(kids_diet$child_fruit_other)
+## Organ meat
+DietDiv<-DietDiv+(kids_diet$child_meat_organ)
+## Meat & fish
+DietDiv<-DietDiv+((kids_diet$child_meat+kids_diet$child_fish)>0)
+## Eggs
+DietDiv<-DietDiv+kids_diet$child_eggs
+## Legumes, nuts and seeds
+DietDiv<-DietDiv+kids_diet$child_legumes_nuts
+## Milk and Milk products
+DietDiv<-DietDiv+((kids_diet$child_milk+kids_diet$child_milk_products)>0)
+
+## Putting back in rows that are all NA
+DietDiv[rows_allNAs]<-NA
+
+#DietDiv (3273 NAs, 7856 total)
+#   0    1    2    3    4    5    6    7    8 
+#1446  317  614  885  679  401  182   44   15 
+
+kids_clean$DietDiv_WDDS<-DietDiv
 
 
-## Calculate WDSS 
 
 
 
