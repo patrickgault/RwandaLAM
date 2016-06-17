@@ -1,30 +1,43 @@
-## Extracts household variables using phrase in hh_labels
+# Cleanup kids dataset for Rwanda DHS data --------------------------
+# Nada Petrovic, USAID PPL & GeoCenter, npetrovic@usaid.gov
+# 16 June 2016
+# (c) 2016 via MIT License
 
-#mutate(kids_clean,kidid=paste(trimws(kids_clean$caseid),kids_clean$midx))
+## Reads in excel spreadsheet that states which variables to keep
+## from kids data set
+kids_labels_tokeep<-read_excel('Excel/kids_labels_tokeep.xlsx')
 
-#kids_clean$kidid<-paste(trimws(kids_all$caseid),kids_all$midx)
+## Relabels "NA" values (ie variables that have not been decided on yet) as 0
+## so that they are not selected. From the Excel spreadsheet pulls the list 
+## of variables to keep and what they should be renamed.
+kids_labels_tokeep$Keep[is.na(kids_labels_tokeep$Keep)]<-0
+data_subset_vars<-kids_labels_tokeep$var[kids_labels_tokeep$Keep==1] 
+data_rename_vars<-kids_labels_tokeep$renamedVar[kids_labels_tokeep$Keep==1] 
 
-#kids_clean = kids_all %>% 
- # select(caseid = as.character(kids_labels$var[kids_labels$varDescrip=="case identification"])) 
+## Creates new clean data frame that is a subset of the overall data frame, 
+## and renames the variables.
+kids_clean<-kids_all[data_subset_vars]
+names(kids_clean)<-data_rename_vars
 
-kids_labels_tokeep<-read_excel('Documents/GitHub/RwandaLAM/Excel/kids_labels_tokeep.xlsx')
+## Checking if "gave child" variables vary by child, by seeing if the sum total
+## of all the food variables + caseid has more uniqueness than caseid alone
+kids_clean$child_food_tot<-rowSums(select(kids_diet,contains("child")),na.rm=TRUE)
+length(unique(kids_diet$caseid))
+## Output: [1] 5955
+length(unique(paste(kids_diet$caseid,kids_diet$child_food_tot)))
+## Output: [1] 5955
+## It does not seem to vary per child
+
+# Wording of question: "Now I would like to ask you about liquids or foods that (NAME FROM 649) #had yesterday during the day or at night. I am interested in whether your child had the #item I mention even if it was #combined with other foods.
+#Did (NAME FROM 649) drink or eat:
+# Where 649 refers to question about "Youngest child living with her born between 2013 and #2015"
+
+### Calculate age by subtracting 
+
+kids_clean$age_calc<-kids_clean$doi-kids_clean$dob_cmc
 
 
-## All of the variables and what they should be renamed to
-var_subset<-c(
-   "caseid = case identification",
-   "wealth_index = wealth index",
-   "cluster_number = cluster number")
+## Calculate WDSS 
 
-var_subset_descrip<-gsub(".*= ", "", var_subset)
-var_subset_rename<-gsub(" =.*", "", var_subset)
 
-## Check loop if it exists & if there are duplicates
-if(var_subset_descrip)
-
-data_all<-kids_all
-data_labels<-kids_labels
-
-kids_clean<-data_all[as.character(data_labels$var[data_labels$varDescrip %in% var_subset_descrip])]
-names(kids_clean)<-var_subset_rename
 
