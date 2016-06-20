@@ -28,7 +28,10 @@ hh_clean = hh %>%
          interviewer_id = hv018,
          
          province_id = hv024,
-         urban = hv025
+         urban = hv025,
+         
+         wealth = hv271,
+         wealth_quintile = hv270
          
          ) %>% 
   mutate(
