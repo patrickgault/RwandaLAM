@@ -92,7 +92,32 @@ attr(hh_wash$water_treat_settle,'label') <- attr(hh$hv237f,'label')
 
 hh_clean <- cbind(hh_clean,hh_wash)
 
+# Digital indicators ---------------------------------------------------------
 
+hh_digital <- hh %>%
+  select(
+    landline = hv221,         # has landline phone?
+    mobile = hv243a,          # has mobile phone?
+    computer = sh110g,        # has computer?
+    tv = hv208,               # has television?
+    radio = hv207,            # has radio?
+    electricity = hv206,      # has electricity?
+    bank = hv247)             # has bank account
+
+hh_clean <- cbind(hh_clean,hh_digital)
+
+# Others that might be useful from non-household data sets
+
+# Women:
+# v157 frequency of reading newspaper/magazine
+# v158 frequency of listening to radio
+# v159 frequency of watching television
+# v743f person who usually decides what to do with money
+
+# Men:
+# mv157 frequency of reading newspaper/magazine
+# mv158 frequency of listening to radio
+# mv159 frequency of watching television
 
 # Exploratory descriptive stats -------------------------------------------
 
