@@ -105,5 +105,22 @@ glm(mobile ~ wealth + urban + geo_q + hoh_age + hoh_ed + num_people +
 #   Don't have a landline phone
 #   Do have a radio
 #   Do have a bank account
+
+###############################################################################
+# Export lat/lon and average of each digital indicator (for kriging)
+###############################################################################
+
+cluster_gp <- hh_clean %>%
+  group_by(cluster_id) %>%
+  summarise(landline=mean(landline,na.rm=TRUE),
+            mobile=mean(mobile,na.rm=TRUE),
+            computer=mean(computer,na.rm=TRUE),
+            tv=mean(tv,na.rm=TRUE),
+            radio=mean(radio,na.rm=TRUE),
+            electricity=mean(electricity,na.rm=TRUE),
+            bank=mean(bank,na.rm=TRUE)) %>%
+  join(geo_clean,by='cluster_id') %>%
+  select(lat,lon,landline:bank)
  
+write.csv(cluster_gp,'GIS/mobile-vars.csv',row.names=FALSE)
 
