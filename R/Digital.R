@@ -124,3 +124,81 @@ cluster_gp <- hh_clean %>%
  
 write.csv(cluster_gp,'GIS/mobile-vars.csv',row.names=FALSE)
 
+###############################################################################
+# Compare DHS indicators with WB data
+###############################################################################
+
+library(WDI)
+
+##### Electricity access ------------------------------------------------------
+elec <- WDI(country='RW',indicator='EG.ELC.ACCS.ZS',start=1960,end=2015) %>% 
+  na.omit() %>%
+  mutate(val=EG.ELC.ACCS.ZS,source='WB') %>%
+  select(val,year,source) 
+
+dhs_elec <- loadDHS(breakdown='national',indicators='HC_ELEC_H_ELC',countries='RW') %>%
+  select(Value,SurveyYear) %>%
+  rename(val=Value,year=SurveyYear) %>%
+  mutate(source='DHS')
+
+elec <- rbind(elec,dhs_elec)
+  
+ggplot(elec,aes(x=year,y=val,group=source,color=source)) +
+  geom_point(size=4) +
+  geom_line(size=2,alpha=0.6) +
+  theme_classic() +
+  ylab('Electricity access (%)')
+
+# DHS and WB data roughly agree; with DHS data we can get into more of the
+# geographic distribution.
+
+##### Mobile ownership ------------------------------------------------------
+mobile <- WDI(country='RW',indicator='IT.CEL.SETS.P2',start=1960,end=2015) %>% 
+  na.omit() %>%
+  mutate(val=IT.CEL.SETS.P2,source='WB') %>%
+  select(val,year,source) %>%
+  filter(year > 1998)
+
+dhs_mobile <- loadDHS(breakdown='national',indicators='HC_HEFF_H_MPH',countries='RW') %>%
+  select(Value,SurveyYear) %>%
+  rename(val=Value,year=SurveyYear) %>%
+  mutate(source='DHS')
+
+mobile <- rbind(mobile,dhs_mobile)
+ggplot(mobile,aes(x=year,y=val,group=source,color=source)) +
+  geom_point(size=4) +
+  geom_line(size=2,alpha=0.6) +
+  theme_classic() +
+  ylab('Mobile ownership (%)')
+
+# These roughly agree, despite the fact that they aren't measuring exactly the
+# same thing -- WB data are for subscriptions per 100 people (and therefore 
+# could be >100), while DHS are the percentage of surveyed households with 
+# mobile phones. The slowdown in DHS growth could be a sign of saturation at 
+# the household level, while subscriptions continue to grow.
+
+# TODO: Add in GSMA data as well and see if it agrees
+
+##### Landline ownership ------------------------------------------------------
+phone <- WDI(country='RW',indicator='IT.MLT.MAIN.P2',start=1960,end=2015) %>% 
+  na.omit() %>%
+  mutate(val=IT.MLT.MAIN.P2,source='WB') %>%
+  select(val,year,source)
+
+dhs_phone <- loadDHS(breakdown='national',indicators='HC_HEFF_H_NPH',countries='RW') %>%
+  select(Value,SurveyYear) %>%
+  rename(val=Value,year=SurveyYear) %>%
+  mutate(source='DHS')
+
+phone <- rbind(phone,dhs_phone)
+ggplot(phone,aes(x=year,y=val,group=source,color=source)) +
+  geom_point(size=4) +
+  geom_line(size=2,alpha=0.6) +
+  theme_classic() +
+  ylab('Telephone ownership (%)')
+
+# Not sure what to make of this, except that the numbers here might not be
+# super-accurate. The big story, I think, is how low it is relative to the 
+# mobile explosion.
+
+
