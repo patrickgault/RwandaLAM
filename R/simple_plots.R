@@ -44,7 +44,7 @@ multi_var_bars <- function(df,vars) {
 ###############################################################################
 # Admin-2 choropleth maps
 ###############################################################################
-adm2_map <- function(df,x) {
+adm2_map <- function(df,x,low_color='ivory',high_color='olivedrab') {
   tmp <- df[,c('cluster_id',x)]
   names(tmp)[2] <- 'val'
   adm2_avg <- tmp %>% 
@@ -58,7 +58,7 @@ adm2_map <- function(df,x) {
     geom_polygon() +
     geom_path(color='gray45') +
     coord_equal() +
-    scale_fill_continuous(low='ivory',high='olivedrab') +
+    scale_fill_continuous(low=low_color,high=high_color) +
     ggtitle(attr(df[,x],'label')) +
     theme(axis.title = element_blank(), 
           axis.text = element_blank(), axis.ticks = element_blank(), 
