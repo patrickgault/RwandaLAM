@@ -51,60 +51,77 @@ adm2_map(hh_clean,'wealth')
 # What determines who owns a mobile phone?
 ###############################################################################
 
-fitme <- hh_all %>% select(
-  cluster_id = hv001,
-  wealth=hv271,
-  mobile=hv243a,
-  urban=hv025,
-  hoh_sex=hv219,
-  hoh_age=hv220,
-  hoh_ed=hv106_01,
-  num_people=hv009,
-  landline = hv221,         # has landline phone?
-  computer = sh110g,        # has computer?
-  tv = hv208,               # has television?
-  radio = hv207,            # has radio?
-  electricity = hv206,      # has electricity?
-  bank = hv247,             # has bank account
-) %>% mutate(
-  urban = ifelse(urban == 1, 1,ifelse(urban == 2, 0,NA))
-  )
-fitme$district <- join(fitme,geo_clean,by='cluster_id')$district
+# Which assets are most predictive of mobile phone ownership?
+assets <- hh_all %>% 
+  select(hv205:hv212,hv213:hv215,hv221,hv225,hv227,hv242:hv244,hv246,hv247,
+         sh110g,sh118f) %>%
+  mutate(
+    # single out the most popular types of toilets
+    pit_toilet = as.numeric(hv205 > 19 & hv205 < 24),
+    no_toilet = as.numeric(hv205 == 31),
+    flush_toilet = as.numeric(hv205 < 16),
+    # floor materials
+    earth_floor = as.numeric(hv213 < 21),
+    improved_floor = as.numeric(hv213 < 20),
+    # wall materials
+    simple_walls = as.numeric(hv214 < 23),
+    adobe_walls = as.numeric(hv214 == 23),
+    nice_walls = as.numeric(hv213 > 23),
+    # roof materials
+    simple_roof = as.numeric(hv215 < 31),
+    metal_roof = as.numeric(hv215 == 31),
+    nice_roof = as.numeric(hv215 > 31)
+  ) %>%
+  select(hv206:hv212,hv221:nice_roof)
 
-dist_avg <- fitme %>% 
-  group_by(district) %>% 
-  summarise(m=mean(mobile,na.rm=TRUE))
+nrow(na.omit(assets)) / nrow(assets)
+# Only 22.6% contain no missing values; we'll need to do some imputation here
 
-dist_avg$q <- cut(dist_avg$m,quantile(dist_avg$m),labels=1:4,include.lowest=TRUE)
-fitme$geo_q <- join(fitme,dist_avg,by='district')$q %>% as.numeric()
+library(mice)
+assets_imp <- mice(assets)
 
-# Note that this is a little funny, because mobile ownership is probably also
-# included in the calculation of the wealth index, so these aren't really
-# independent.
+form <-  select(assets,-hv243a) %>% names() %>% 
+  paste(collapse=' + ') %>% paste('hv243a ~ ',.,collapse='')
 
-ggplot(fitme,aes(wealth,mobile)) +
-  geom_jitter(width=0,height=0.4,size=2,color='tomato',alpha=0.05) +
-  geom_smooth(method="glm", method.args = list(family = "binomial")) +
-  theme_classic()
-# Wealthy people definitely are more likely to have a mobile, but there is
-# a fair amount of overlap between the two distributions.
+fit_assets <- with(data=assets_imp,exp=glm(as.formula(form),family=binomial(link='logit')))
+summary(fit_assets)
+# The strongest correlations seem to be with 
+#   hv207 - radio (55.3%)
+#   hv247 - bank account (47.9%)
+#   hv210 - bicycle (14.1%)
+#   hv206 - electricity (25.1%)
+# Mobile phone ownership is 61.1%
 
-glm(mobile ~ wealth + urban + geo_q + hoh_age + hoh_ed + num_people +
-      landline + tv + computer + radio + bank + hoh_sex + electricity,
-    family=binomial(link='logit'),data=fitme) %>%
-  summary()
-# AIC = 10985
+# Which household demographics are most predictive of mobile ownership?
 
-# Households are much more likely to own a mobile phone if they are
-#   Wealthy
-#   Located in certain geographic areas
-#   Have a young head of household
-#   Have an educated head of household
-#   Have a female head of household
-#   Have more people living there
-#   Don't have a landline phone
-#   Do have a radio
-#   Do have a bank account
+# NOTE: hv106-9 all measure education level with slightly different categories
+# Choose the one that gets me the best AIC.
+
+demo <- hh_all %>%
+  select(hv243a,hv009:hv014,hv025,hv219,hv220,hv107_01,hv115_01) %>%
+  mutate(hv115_01 = as.factor(hv115_01))
+nrow(na.omit(demo)) / nrow(demo) # 99.4% complete -- no need for imputation
+
+fit_demo <- glm(hv243a ~ .,family=binomial(link='logit'),data=demo)
+summary(fit_demo)
+# Which education variable to use?
+#  hv106 gets me AIC = 13864
+#  hv107 gets me AIC = 10054
+#  hv108 gets me AIC = 13543
+#  hv109 gets me AIC = 13650
+
+# Strongest correlations:
+#    hv025 - urban 
+#    hv107_01 - more educated HoH
+#    hv014 - fewer kids
+#    hv010 - more women in HH
+#    hv115_01=5 - not living together
+#    hv220 - younger HoH
+
+# The gender piece here is interesting; more adults in the house generally 
+# means greater chance of mobile ownership (hv009,10,11), with women having
+# a stronger effect than men. Male-headed households are more likely to 
+# have one, though (hv219).
 
 ###############################################################################
 # Export lat/lon and average of each digital indicator (for kriging)
