@@ -101,10 +101,11 @@ summary(fit_assets)
 # 2010 and 2014?
 
 assets$wealth <- hh_all$hv271
-ggplot(assets,aes(wealth,hv209)) +
+ggplot(assets,aes(wealth,hv243a)) +
   geom_jitter(size=4,color='tomato',alpha=0.1,width=0,height=0.4) +
   geom_smooth(method = "glm", method.args = list(family = "binomial")) +
-  theme_classic()
+  theme_classic() +
+  ylab('Has mobile phone')
 
 s <- glm(hv209 ~ wealth,family=binomial(link='logit'),data=assets) %>% 
   summary()
@@ -132,6 +133,20 @@ good_assets
 
 # So it looks like, once people get a little bit of money, the first thing
 # they invest in is a corrugated metal roof, and the next is a mobile phone.
+
+good_assets <- mutate(good_assets,x=0,w50=w50/1e5)
+y_nudges <- c(0,0,0,0,-0.03,0.03,0,-0.04,0.04,0,-0.05,0.05,0.02)
+ggplot(good_assets,aes(x=x,y=w50,label=label)) +
+  geom_point(size=5,color='gray59') +
+  geom_text(hjust=1,nudge_x=-0.03,nudge_y=y_nudges) +
+  scale_x_continuous(limits=c(-0.3,1)) +
+  theme_classic() +
+  theme(axis.title=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks=element_blank())
+
+# Is there a difference between urban and rural households?
+
 
 # Which household demographics are most predictive of mobile ownership?
 
