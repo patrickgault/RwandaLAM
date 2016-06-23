@@ -53,7 +53,7 @@ adm2_map(hh_clean,'wealth')
 
 # Which assets are most predictive of mobile phone ownership?
 assets <- hh_all %>% 
-  select(hv205:hv212,hv213:hv215,hv221,hv225,hv227,hv242:hv244,hv246,hv247,
+  select(hv205:hv212,hv213:hv215,hv221,hv227,hv242:hv244,hv246,hv247,
          sh110g,sh118f) %>%
   mutate(
     # single out the most popular types of toilets
@@ -62,11 +62,11 @@ assets <- hh_all %>%
     flush_toilet = as.numeric(hv205 < 16),
     # floor materials
     earth_floor = as.numeric(hv213 < 21),
-    improved_floor = as.numeric(hv213 < 20),
+    improved_floor = as.numeric(hv213 > 20),
     # wall materials
     simple_walls = as.numeric(hv214 < 23),
     adobe_walls = as.numeric(hv214 == 23),
-    nice_walls = as.numeric(hv213 > 23),
+    nice_walls = as.numeric(hv214 > 23),
     # roof materials
     simple_roof = as.numeric(hv215 < 31),
     metal_roof = as.numeric(hv215 == 31),
@@ -91,6 +91,47 @@ summary(fit_assets)
 #   hv210 - bicycle (14.1%)
 #   hv206 - electricity (25.1%)
 # Mobile phone ownership is 61.1%
+
+# Compare with 2010 -- has the share of mobile ownership among
+# people without these assets grown or shrunk? What did correlations
+# look like then?
+
+# For each asset, what is the wealth index level at which people are
+# more likely to own one than not to? Do these rankings change between
+# 2010 and 2014?
+
+assets$wealth <- hh_all$hv271
+ggplot(assets,aes(wealth,hv209)) +
+  geom_jitter(size=4,color='tomato',alpha=0.1,width=0,height=0.4) +
+  geom_smooth(method = "glm", method.args = list(family = "binomial")) +
+  theme_classic()
+
+s <- glm(hv209 ~ wealth,family=binomial(link='logit'),data=assets) %>% 
+  summary()
+-s$coefficients[1,1]/s$coefficients[2,1]
+# agrees with estimate from the plot
+
+# Be more systematic
+test <- ldply(names(select(assets,-wealth)),function(n) {
+  label <- n
+  if (n %in% hh_labels$var) {
+    label <- hh_labels[hh_labels$var==n,'varDescrip']
+  }
+  f <- paste(n,' ~ wealth',collapse='') %>% as.formula()
+  s <- glm(f,family=binomial(link='logit'),data=assets) %>% summary()
+  w50 <- -s$coefficients[1,1]/s$coefficients[2,1]
+  in_range <- w50 > min(assets$wealth) & w50 < max(assets$wealth)
+  haves <- assets[assets[,n]==1,'wealth']
+  have_nots <- assets[assets[,n]==0,'wealth']
+  pos <- mean(haves,na.rm=TRUE) > mean(have_nots,na.rm=TRUE)
+  data.frame(label=label,in_range=in_range,pos=pos,w50=w50)
+})
+good_assets <- test[test$in_range & test$pos,c('label','w50')]
+good_assets <- good_assets[order(good_assets$w50),]
+good_assets
+
+# So it looks like, once people get a little bit of money, the first thing
+# they invest in is a corrugated metal roof, and the next is a mobile phone.
 
 # Which household demographics are most predictive of mobile ownership?
 
@@ -122,6 +163,9 @@ summary(fit_demo)
 # means greater chance of mobile ownership (hv009,10,11), with women having
 # a stronger effect than men. Male-headed households are more likely to 
 # have one, though (hv219).
+
+# Compare with 2010 -- how does adoption growth differ urban/rural, 
+# male/female headed, younger/older HoH? Marital status?
 
 ###############################################################################
 # Export lat/lon and average of each digital indicator (for kriging)
