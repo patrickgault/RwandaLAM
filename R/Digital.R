@@ -222,6 +222,28 @@ compare_assets <- join(good_assets,good_assets2010,by='label') %>% select(label,
 # switched places with radio as the first electronic device people buy,
 # leading radio to be the only item to show an increase.
 
+# It's a little murky what changes relative to the wealth index from year
+# to year actually mean; might be better to look at changes in ownership.
+mean(assets$hv243a,na.rm=TRUE)      # 61.1% mobile in 2015
+mean(assets2010$hv243a,na.rm=TRUE)  # 41.3% in 2010
+
+mean(assets$hv207,na.rm=TRUE)     # 55.3% radio in 2015
+mean(assets2010$hv207,na.rm=TRUE) # 63% in 2010
+# Confirms the radio/mobile flip
+
+library(reshape2)
+m <- compare_assets %>% select(label,w50_2010,w50_2015) %>%
+  melt() %>%
+  mutate(x=ifelse(variable=='w50_2010',0,1))
+ggplot(m,aes(x,value,group=label,label=label)) +
+  geom_point(size=4,color='gray59') +
+  geom_line(size=2,color='gray59') +
+  geom_text(aes(hjust=x)) +
+  theme_classic()
+# Not too pretty, but I should hold off on developing this further until
+# I know that it's really meaningful.
+
+
 # Which household demographics are most predictive of mobile ownership?
 
 # NOTE: hv106-9 all measure education level with slightly different categories
