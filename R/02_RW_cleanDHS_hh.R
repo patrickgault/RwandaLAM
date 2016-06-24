@@ -1,5 +1,5 @@
 # Cleanup household dataset for Rwanda DHS data --------------------------
-# Laura Hughes, USAID GeoCenter, lhughes@usaid.gov
+# Laura Hughes & Nada Petrovic, USAID GeoCenter & PPL, lhughes@usaid.gov
 # 10 June 2016
 # (c) 2016 via MIT License
 
@@ -7,42 +7,30 @@ library(ggplot2)
 
 # basic info --------------------------------------------------------------
 
-hh_clean = hh %>% 
-  select(hhid,
-         cluster_id = hv001,
-         hh_num = hv002,
-         
-         num_hh = hv012, # de jure members
-         num_females15_49 = hv010, # number of 'eligible' women: women 15-49 who slept in house previous night (irrespective of whetehr live or visit)
-         num_males = hv011, # number of 'eligible' men: men 15-49 who slept in house previous night (irrespective of whetehr live or visit)
-         num_under5 = hv014,
-         
-         hh_weight = hv005,
-         male_weight = hv028,
-         sample_strata = hv022,
-         
-         interview_month = hv006,
-         interview_year = hv007,
-         interview_cmc = hv008, # interview in century-month-code
-         interview_day = hv016,
-         interviewer_id = hv018,
-         
-         province_id = hv024,
-         urban = hv025,
-         
-         wealth = hv271,
-         wealth_quintile = hv270
-         
-         ) %>% 
-  mutate(
-    # -- Convert sampling rates to appropriate value --
-    
-    # -- Recode --
-    urban = ifelse(urban == 1, TRUE, # recode rural category to be binary (1 if rural, 0 if urban)
-                        ifelse(urban == 2, FALSE,
-                               NA)),
-    rural = !urban
-    )
+## Reads in excel spreadsheet that states which variables to keep
+## from kids data set
+hh_labels_tokeep<-read_excel('Excel/hh_vars_tokeep.xlsx')
+
+## Relabels "NA" values (ie variables that have not been decided on yet) as 0
+## so that they are not selected. From the Excel spreadsheet pulls the list 
+## of variables to keep and what they should be renamed.
+hh_labels_tokeep$Keep[is.na(hh_labels_tokeep$Keep)]<-0
+data_subset_vars<-hh_labels_tokeep$var[hh_labels_tokeep$Keep==1] 
+data_rename_vars<-hh_labels_tokeep$renamedVar[hh_labels_tokeep$Keep==1] 
+
+## Creates new clean data frame that is a subset of the overall data frame, 
+## and renames the variables.
+hh_clean<-hh_all[data_subset_vars]
+names(hh_clean)<-data_rename_vars
+
+hh_clean %>% mutate(
+  # -- Convert sampling rates to appropriate value --
+  # -- Recode --
+  urban = ifelse(urban == 1, TRUE, # recode rural category to be binary (1 if rural, 0 if urban)
+                 ifelse(urban == 2, FALSE,
+                        NA)),
+  rural = !urban
+)
 
 
 # WASH indicators ---------------------------------------------------------
