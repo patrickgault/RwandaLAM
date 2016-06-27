@@ -25,7 +25,7 @@
 #'
 
 # Import/Load packages ----------------------------------------------------
-pkgs = c('dplyr', 'haven', 'tidyr', 'ggplot2', 'readxl', 'foreign', 'data.table', 'stringr')
+pkgs = c('plyr', 'dplyr', 'haven', 'tidyr', 'ggplot2', 'readxl', 'foreign', 'data.table', 'stringr')
 
 # Check if packages are installed
 alreadyInstalled = installed.packages()[, "Package"]
