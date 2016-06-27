@@ -40,8 +40,6 @@ adm2_map(hh_clean,'electricity')
 # explain the lack of TVs and computers -- devices outside the capital are
 # things like mobiles and radios that can run on batteries.
 
-# TODO: Would be nice to overlay some maps with VIIRS night lights images.
-
 adm2_map(hh_clean,'wealth')
 # So the concentration of some goods in Kigali could have as much to do with
 # household wealth as with infrastructure. Separating the two out might
@@ -63,10 +61,10 @@ assets <- hh_all %>%
     # floor materials
     earth_floor = as.numeric(hv213 < 21),
     improved_floor = as.numeric(hv213 > 20),
-    # wall materials
-    bamboo_mud_walls = as.numeric(hv214 == 21 & hv214==27),
-    adobe_walls = as.numeric(hv214 == 23),
-    covered_adobe_walls = as.numeric(hv214 == 35),
+    # # wall materials
+    # bamboo_mud_walls = as.numeric(hv214 == 21 & hv214==27),
+    # adobe_walls = as.numeric(hv214 == 23),
+    # covered_adobe_walls = as.numeric(hv214 == 35),
     # roof materials
     simple_roof = as.numeric(hv215 < 31),
     metal_roof = as.numeric(hv215 == 31),
@@ -107,11 +105,6 @@ ggplot(assets,aes(wealth,hv243a)) +
   theme_classic() +
   ylab('Has mobile phone')
 
-s <- glm(hv209 ~ wealth,family=binomial(link='logit'),data=assets) %>% 
-  summary()
--s$coefficients[1,1]/s$coefficients[2,1]
-# agrees with estimate from the plot
-
 # Be more systematic
 test <- ldply(names(select(assets,-wealth)),function(n) {
   label <- n
@@ -125,16 +118,16 @@ test <- ldply(names(select(assets,-wealth)),function(n) {
   haves <- assets[assets[,n]==1,'wealth']
   have_nots <- assets[assets[,n]==0,'wealth']
   pos <- mean(haves,na.rm=TRUE) > mean(have_nots,na.rm=TRUE)
-  data.frame(label=label,in_range=in_range,pos=pos,w50=w50)
+  data.frame(label=label,n=n,in_range=in_range,pos=pos,w50=w50)
 })
-good_assets <- test[test$in_range & test$pos,c('label','w50')]
-good_assets <- good_assets[order(good_assets$w50),]
+good_assets <- test[test$in_range & test$pos,c('label','n','w50')] %>%
+  mutate(x=0,w50=w50/1e5) %>%
+  arrange(w50)
 good_assets
 
 # So it looks like, once people get a little bit of money, the first thing
 # they invest in is a corrugated metal roof, and the next is a mobile phone.
 
-good_assets <- mutate(good_assets,x=0,w50=w50/1e5)
 y_nudges <- c(0,0,0,0,-0.03,0.03,0,-0.04,0.04,0,-0.05,0.05,0.02)
 ggplot(good_assets,aes(x=x,y=w50,label=label)) +
   geom_point(size=5,color='gray59') +
@@ -144,6 +137,11 @@ ggplot(good_assets,aes(x=x,y=w50,label=label)) +
   theme(axis.title=element_blank(),
         axis.text.x=element_blank(),
         axis.ticks=element_blank())
+
+# While this kind of visualization is useful within a single year, I'm
+# reluctant to compare with 2010, since the wealth indices themselves
+# don't necessarily match up well. Instead, just look at adoption rates
+# for each of these wealth-level-defining goods.
 
 # What has changed since 2010?
 library(haven)
@@ -179,10 +177,10 @@ assets2010 <- hh2010 %>%
     # floor materials
     earth_floor = as.numeric(hv213 < 21),
     improved_floor = as.numeric(hv213 > 20),
-    # wall materials
-    bamboo_mud_walls = as.numeric(hv214 == 21 & hv214==27),
-    adobe_walls = as.numeric(hv214 == 23),
-    covered_adobe_walls = as.numeric(hv214 == 35),
+    # # wall materials
+    # bamboo_mud_walls = as.numeric(hv214 == 21 & hv214==27),
+    # adobe_walls = as.numeric(hv214 == 23),
+    # covered_adobe_walls = as.numeric(hv214 == 35),
     # roof materials
     simple_roof = as.numeric(hv215 < 31),
     metal_roof = as.numeric(hv215 == 31),
@@ -192,57 +190,33 @@ assets2010 <- hh2010 %>%
   select(hv206:hv212,hv221:nice_roof) %>%
   removeAttributes()
 
+# Compare adoption rates for 2010 and 2014
+# TODO: I'm not sure exactly how to adjust these for sampling weights
 
-test2010 <- ldply(names(select(assets2010,-wealth)),function(n) {
-  label <- n
-  if (n %in% hh2010_labels$var) {
-    label <- hh2010_labels[hh2010_labels$var==n,'varDescrip']
-  }
-  f <- paste(n,' ~ wealth',collapse='') %>% as.formula()
-  s <- glm(f,family=binomial(link='logit'),data=assets2010) %>% summary()
-  w50 <- -s$coefficients[1,1]/s$coefficients[2,1]/1e5
-  in_range <- w50 > min(assets2010$wealth) & w50 < max(assets2010$wealth)
-  haves <- assets2010[assets2010[,n]==1,'wealth']
-  have_nots <- assets2010[assets2010[,n]==0,'wealth']
-  pos <- mean(haves,na.rm=TRUE) > mean(have_nots,na.rm=TRUE)
-  data.frame(n=n,label=label,in_range=in_range,pos=pos,w50=w50)
-})
-good_assets2010 <- test2010[test2010$in_range & test2010$pos,c('n','label','w50')]
-good_assets2010 <- good_assets2010[order(good_assets2010$w50),]
-good_assets2010
+plotme <- good_assets %>% select(label,n) %>%
+  adply(1,function(x) {
+    v <- as.character(x$n)
+    mutate(x,
+      mean_10 = mean(assets2010[,v],na.rm=TRUE),
+      mean_15 = mean(assets[,v],na.rm=TRUE)
+    )
+  }) %>%
+  melt(id.vars=c('label','n')) %>%
+  mutate(x=ifelse(variable=='mean_10',0,1))
+ggplot(plotme,aes(x,value,group=label,label=label)) +
+  geom_point(aes(color=label),size=5) +
+  geom_line(aes(color=label),size=3,alpha=0.6) +
+  geom_text(hjust=1,nudge_x=-0.03) +
+  scale_x_continuous(limits=c(-0.5,1)) +
+  theme(title = element_blank(), axis.title = element_blank(), 
+        axis.text.x = element_blank(), axis.ticks = element_blank(), 
+        axis.ticks.length = unit(0, units = "points"), panel.border = element_blank(), 
+        panel.grid = element_blank(), panel.background = element_blank(), 
+        plot.background = element_blank(), legend.position = "none")
 
-good_assets <- rename(good_assets,w50_2015=w50)
-good_assets2010 <- rename(good_assets2010,w50_2010=w50)
-compare_assets <- join(good_assets,good_assets2010,by='label') %>% select(label,w50_2010,w50_2015) %>%
-  mutate(diff=w50_2015-w50_2010)
-
-# So it looks like most things came down, suggesting that items became 
-# within reach for more people between 2010 and 2015. Mobiles showed
-# a decrease, though not the most dramatic one -- they seem to have
-# switched places with radio as the first electronic device people buy,
-# leading radio to be the only item to show an increase.
-
-# It's a little murky what changes relative to the wealth index from year
-# to year actually mean; might be better to look at changes in ownership.
-mean(assets$hv243a,na.rm=TRUE)      # 61.1% mobile in 2015
-mean(assets2010$hv243a,na.rm=TRUE)  # 41.3% in 2010
-
-mean(assets$hv207,na.rm=TRUE)     # 55.3% radio in 2015
-mean(assets2010$hv207,na.rm=TRUE) # 63% in 2010
-# Confirms the radio/mobile flip
-
-library(reshape2)
-m <- compare_assets %>% select(label,w50_2010,w50_2015) %>%
-  melt() %>%
-  mutate(x=ifelse(variable=='w50_2010',0,1))
-ggplot(m,aes(x,value,group=label,label=label)) +
-  geom_point(size=4,color='gray59') +
-  geom_line(size=2,color='gray59') +
-  geom_text(aes(hjust=x)) +
-  theme_classic()
-# Not too pretty, but I should hold off on developing this further until
-# I know that it's really meaningful.
-
+# So connectivity-related assets have increased across the board, but mobiles
+# are particularly strong and are now really close to being the most 
+# commonly-held asset (out of this set).
 
 # Which household demographics are most predictive of mobile ownership?
 
