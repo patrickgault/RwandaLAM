@@ -19,6 +19,9 @@ data_rename_vars<-kids_labels_tokeep$renamedVar[kids_labels_tokeep$Keep==1]
 kids_clean<-kids_all[data_subset_vars]
 names(kids_clean)<-data_rename_vars
 
+## The zscore needs to be divided by 100
+kids_clean$height_age_zscore<-kids_clean$height_age_zscore/100
+
 ### Calculate age by subtracting 
 kids_clean$age_calc_months<-kids_clean$interview_date_cmc-kids_clean$dob_cmc
 
@@ -29,7 +32,7 @@ kids_clean$age_calc_months<-kids_clean$interview_date_cmc-kids_clean$dob_cmc
 child_food_tot<-rowSums(select(kids_clean,contains("child")),na.rm=TRUE)
 length(unique(kids_clean$caseid))
 ## Output: [1] 5955
-length(unique(paste(kids_diet$caseid,child_food_tot)))
+length(unique(paste(kids_clean$caseid,child_food_tot)))
 ## Output: [1] 5955
 ## It does not seem to vary per child
 

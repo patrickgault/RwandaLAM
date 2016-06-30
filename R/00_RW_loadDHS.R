@@ -50,7 +50,7 @@ for (i in seq_along(pkgs)) {
 
 # Main function to load data ----------------------------------------------
 
-setRwWD = function(user = 'Tim',
+setRwWD = function(user = 'Nada',
                    path = NA) {
   
   # Set up the working directory where the DHS data are locally stored.
