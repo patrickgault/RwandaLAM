@@ -6,6 +6,10 @@
 source('R/01_RW_cleanDHS.R')
 source('R/simple_plots.R')
 
+# TODO: What I'd eventually like to see this script become is a standardized
+# set of plotting functions that we could apply to any (suitably-cleaned) DHS
+# to get a snapshot of digital connectivity in that country.
+
 ###############################################################################
 # Simple choropleth maps
 ###############################################################################
@@ -316,8 +320,52 @@ ggplot(plotme,aes(x=x,y=value,group=name,color=group,label=name)) +
 # TODO: Refactor this as a function that can create a slopeplot like this
 # for other assets, not just mobile adoption.
 
-# TODO: choropleth map of changes in asset adoption rates
+# TODO: Make something similar that shows adoption rates for a single 
+# asset across wealth quintiles.
 
+# Choropleth map of changes in asset adoption rates
+
+# I don't have access to the GPS dataset for 2010, so I'll have to get
+# locations from hh_2010. There must be a more elegant way to do this.
+key10 <- attr(hh2010$shdistr,'labels')
+simpleCap <- function(x) {
+  s <- strsplit(x, " ")[[1]]
+  paste(toupper(substring(s, 1, 1)), substring(s, 2),
+        sep = "", collapse = " ")
+}
+cap_names10 <- sapply(names(key10),simpleCap)
+dist_2010 <- cap_names10[match(hh2010$shdistr,key10)] %>% as.vector()
+
+tmp2010 <- data.frame(district=dist_2010,mobile=assets2010$hv243a) %>%
+  group_by(district) %>%
+  summarise(m2010 = mean(mobile,na.rm=TRUE)) %>%
+  mutate(district=as.character(district))
+dist_mobile <- data.frame(cluster_id=hh_all$hv001,mobile=hh_all$hv243a) %>%
+  join(geo_clean[,c('cluster_id','district')],by='cluster_id') %>%
+  group_by(district) %>%
+  summarize(m2015 = mean(mobile,na.rm=TRUE)) %>%
+  mutate(district=as.character(district)) %>%
+  join(tmp2010,by='district') %>%
+  mutate(change = m2015/m2010,
+         NAME_2 = as.character(district))
+ 
+plotme <- join(rwanda.adm2,dist_mobile,by='NAME_2')
+ggplot(plotme) +
+  aes(long,lat,group=group,fill=change) +
+  geom_polygon() +
+  geom_path(color='gray45') +
+  coord_equal() +
+  scale_fill_continuous(low='ivory',high='olivedrab') +
+  ggtitle("Increase in mobile adoption: 2010-2015") +
+  theme(axis.title = element_blank(), 
+        axis.text = element_blank(), axis.ticks = element_blank(), 
+        axis.ticks.length = unit(0, units = "points"), panel.border = element_blank(), 
+        panel.grid = element_blank(), panel.background = element_blank(), 
+        plot.background = element_blank())
+  
+# It would be nice to be able to calculate kriged rasters for bouth 2015 and
+# 2010 and calculate a ratio or difference between them, but that would 
+# require the 2010 coordinates.
 
 ###############################################################################
 # Export lat/lon and average of each digital indicator (for kriging)
