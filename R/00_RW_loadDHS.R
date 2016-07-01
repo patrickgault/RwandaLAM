@@ -45,9 +45,6 @@ for (i in seq_along(pkgs)) {
 }
 
 
-
-
-
 # Main function to load data ----------------------------------------------
 
 setRwWD = function(user = 'Nada',

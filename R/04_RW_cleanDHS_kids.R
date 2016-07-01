@@ -19,6 +19,14 @@ data_rename_vars<-kids_labels_tokeep$renamedVar[kids_labels_tokeep$Keep==1]
 kids_clean<-kids_all[data_subset_vars]
 names(kids_clean)<-data_rename_vars
 
+## Creates household id variable for merging with hh data set, note
+## this is not the same as hhid due to weirdness in spacing of DHS
+## paste job.  It can only be merged with a homemade household id like
+## this one.
+kids_clean$cluster_hh_num<-paste(kids_clean$cluster_num,kids_clean$hh_num)
+
+## Replace all 9998 values with NA
+kids_clean<-kids_clean %>% mutate(height_age_zscore = replace(height_age_zscore, height_age_zscore==9998, NA))
 ## The zscore needs to be divided by 100
 kids_clean$height_age_zscore<-kids_clean$height_age_zscore/100
 
