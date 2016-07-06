@@ -12,12 +12,15 @@ library(llamar)
 ###############################################################################
 # Bar plot for categorical variables
 ###############################################################################
-# TODO: This no longer adds labels correctly; need to find a way to retrieve
-# them from hh_labels.
-categ_bars <- function(df,var) {
-  t <- table(df[,var]) %>% as.data.frame(.,stringsAsFactors=FALSE)
+categ_bars <- function(df,my_var) {
+  t <- table(df[,my_var]) %>% as.data.frame(.,stringsAsFactors=FALSE)
   t$Var1 <- as.integer(t$Var1)
-  lab <- attr(df[1,var],'label')
+  #lab <- attr(df[1,var],'label')   # No longer works
+  tmp <- hh_labels_tokeep %>% 
+    filter(renamedVar==my_var) %>%
+    na.omit() %>%
+    join(hh_labels,by='var')
+  lab <- tmp[1,'varValues'][[1]] 
   if (is.null(lab)) {
     lab <- t$Var1
     names(lab) <- as.character(lab)
