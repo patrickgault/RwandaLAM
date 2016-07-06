@@ -12,7 +12,7 @@ source('R/simple_plots.R')
 ###############################################################################
 
 # hv201 - source of drinking  water
-categ_bars(hh_clean,'water_source')
+categ_bars(hh,'water_source')
 # Most prevalent are protected springs, public taps/standpipes
 
 # hv205 - type of toilet facility

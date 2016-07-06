@@ -11,7 +11,7 @@ library(maptools)
 # select relevant variables -----------------------------------------------
 
 geo_clean = geo %>% 
-  select(cluster_id = DHSCLUST, # should match v001 in DHS main files.
+  select(cluster_num = DHSCLUST, # should match v001 in DHS main files.
          province = ADM1NAME,
          province_id = ADM1DHS, # should match v024
          district = DHSREGNA,
