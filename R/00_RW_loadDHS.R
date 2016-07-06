@@ -25,7 +25,7 @@
 #'
 
 # Import/Load packages ----------------------------------------------------
-pkgs = c('dplyr', 'haven', 'tidyr', 'ggplot2', 'readxl', 'foreign', 'data.table', 'stringr')
+pkgs = c('plyr', 'dplyr', 'haven', 'tidyr', 'ggplot2', 'readxl', 'foreign', 'data.table', 'stringr')
 
 # Check if packages are installed
 alreadyInstalled = installed.packages()[, "Package"]
@@ -45,9 +45,12 @@ for (i in seq_along(pkgs)) {
 }
 
 
+
+
+
 # Main function to load data ----------------------------------------------
 
-setRwWD = function(user = 'Nada',
+setRwWD = function(user = 'Tim',
                    path = NA) {
   
   # Set up the working directory where the DHS data are locally stored.
@@ -92,7 +95,7 @@ setRwWD = function(user = 'Nada',
 }  
 
 
-path = setRwWD(user = 'Nada')
+path = setRwWD(user = 'Craig')
 
 # Import raw data ---------------------------------------------------------
 
