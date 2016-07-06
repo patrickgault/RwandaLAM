@@ -9,7 +9,7 @@ library(ggplot2)
 
 ## Reads in excel spreadsheet that states which variables to keep
 ## from kids data set
-hh_labels_tokeep<-read_excel('Excel/hh_vars_tokeep.xlsx')
+hh_labels_tokeep<-read_excel('R/Excel/hh_vars_tokeep.xlsx')
 
 ## Relabels "NA" values (ie variables that have not been decided on yet) as 0
 ## so that they are not selected. From the Excel spreadsheet pulls the list 
