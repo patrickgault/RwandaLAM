@@ -12,6 +12,8 @@ library(llamar)
 ###############################################################################
 # Bar plot for categorical variables
 ###############################################################################
+# TODO: This no longer adds labels correctly; need to find a way to retrieve
+# them from hh_labels.
 categ_bars <- function(df,var) {
   t <- table(df[,var]) %>% as.data.frame(.,stringsAsFactors=FALSE)
   t$Var1 <- as.integer(t$Var1)
@@ -31,6 +33,7 @@ categ_bars <- function(df,var) {
 ###############################################################################
 # Show the 'yes' values of several yes/no variables all in one place
 ###############################################################################
+# TODO: This doesn't work anymore now that we've lost labels
 multi_var_bars <- function(df,vars) {
   lab <- sapply(vars, function(x) attr(df[,x],'label')) %>%
     as.character()
@@ -45,10 +48,10 @@ multi_var_bars <- function(df,vars) {
 # Admin-2 choropleth maps
 ###############################################################################
 adm2_map <- function(df,x,low_color='ivory',high_color='olivedrab') {
-  tmp <- df[,c('cluster_id',x)]
+  tmp <- df[,c('cluster_num',x)]
   names(tmp)[2] <- 'val'
   adm2_avg <- tmp %>% 
-    join(geo_clean,by='cluster_id') %>%
+    join(geo_clean,by='cluster_num') %>%
     group_by(district) %>%
     summarise(val=mean(val,na.rm=TRUE)) %>%
     mutate(NAME_2=as.character(district)) 

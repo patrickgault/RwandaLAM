@@ -7,6 +7,11 @@ library(ggplot2)
 
 # basic info --------------------------------------------------------------
 
+# TODO: Add some data quality checks for hh_vars_tokeep.xlsx
+#   - Are all var and varDescrip entries valid and consistent?
+#   - Are all renamedVar entries unique?
+#   - Are all Keep entries either 1 or NA?
+
 ## Reads in excel spreadsheet that states which variables to keep
 ## from kids data set
 hh_labels_tokeep<-read_excel('R/Excel/hh_vars_tokeep.xlsx')
