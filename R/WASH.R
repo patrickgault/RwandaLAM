@@ -1,13 +1,74 @@
-# Initial analysis of WASH-related variables --------------------------
-# Craig Jolley, USAID GeoCenter, cjolley.usaid@gmail.com
-# 20 June 2016
-# (c) 2016 via MIT License
-
 source('R/01_RW_cleanDHS.R')
-source('R/simple_plots.R')
 
+require("rgdal") 
+require("maptools")
+require(plyr)
+require(dplyr)
+require(ggplot2)
+library(llamar)
 
-##############################################################################
+###############################################################################
+# Bar plot for categorical variables
+###############################################################################
+categ_bars <- function(df,var) {
+  t <- table(df[,var]) %>% as.data.frame(.,stringsAsFactors=FALSE)
+  t$Var1 <- as.integer(t$Var1)
+  lab <- attr(df[1,var],'label')
+  if (is.null(lab)) {
+    lab <- t$Var1
+    names(lab) <- as.character(lab)
+  }
+  t$label <- names(lab)[match(t$Var1,lab)]
+  t[is.na(t$label),'label'] <- as.character(t[is.na(t$label),'Var1'])
+  print(t)
+  ggplot(t,aes(x=label,y=Freq)) +
+    geom_bar(stat='identity') + 
+    coord_flip()   
+}
+
+###############################################################################
+# Show the 'yes' values of several yes/no variables all in one place
+###############################################################################
+multi_var_bars <- function(df,vars) {
+  lab <- sapply(vars, function(x) attr(df[,x],'label')) %>%
+    as.character()
+  plotme <- data.frame(var=vars,label=lab,
+                   val=sapply(vars,function(x) mean(df[,x]==1,na.rm=TRUE)))
+  ggplot(plotme,aes(x=label,y=val)) +
+    geom_bar(stat='identity') + 
+    coord_flip() 
+}
+
+###############################################################################
+# Admin-2 choropleth maps
+###############################################################################
+adm2_map <- function(df,x) {
+  tmp <- df[,c('cluster_id',x)]
+  names(tmp)[2] <- 'val'
+  adm2_avg <- tmp %>% 
+    join(geo_clean,by='cluster_id') %>%
+    group_by(district) %>%
+    summarise(val=mean(val,na.rm=TRUE)) %>%
+    mutate(NAME_2=as.character(district)) 
+  plotme <- join(rwanda.adm2,adm2_avg,by='NAME_2')
+  ggplot(plotme) +
+    aes(long,lat,group=group,fill=val) +
+    geom_polygon() +
+    geom_path(color='gray45') +
+    coord_equal() +
+    scale_fill_continuous(low='ivory',high='olivedrab') +
+    ggtitle(attr(df[,x],'label')) +
+    theme(axis.title = element_blank(), 
+          axis.text = element_blank(), axis.ticks = element_blank(), 
+          axis.ticks.length = unit(0, units = "points"), panel.border = element_blank(), 
+          panel.grid = element_blank(), panel.background = element_blank(), 
+          plot.background = element_blank())
+}
+
+# TODO: Need a good way of mapping categorical variables, either with small
+# multiples or majority coloring.
+
+###############################################################################
 # Explore the WASH-relevant variables in hh (Household-level)
 ###############################################################################
 
