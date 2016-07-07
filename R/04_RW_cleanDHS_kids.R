@@ -54,6 +54,19 @@ kids_clean %>% mutate(stunted = ifelse(height_age_zscore <= -2, 1, 0)) %>%
   stat_smooth(method = "loess", se = TRUE, span = 0.75, size = 1.15, alpha = 0.1) + 
   theme_fivethirtyeight() +
   ggtitle("stunting declines steadily with wealth (asset accumulation)")
+
+# Finally, break it down by wealth and age category
+# TODO: figure out if 1 is boy or girl!
+kids_clean %>% mutate(stunted = ifelse(height_age_zscore <= -2, 1, 0), 
+                      agegroup = cut(age_calc_months, seq(0, 60, by = 6))) %>%
+  group_by(agegroup, wealth_index, sex) %>% 
+  summarise(stunting = mean(stunted, na.rm = TRUE)) %>% 
+  filter(stunting != 0) %>% 
+  ggplot(aes(x = agegroup, y = wealth_index, fill = stunting)) +
+  geom_tile(colour = 'white',size = 0.25, stat = "identity") +
+  scale_fill_viridis(option="D") +
+  geom_text(aes(y = wealth_index, x = agegroup, label = sprintf("%1.0f%%", round(100*stunting, 2)), size = 1)) +
+  theme_fivethirtyeight() + facet_wrap(~sex, nrow = 2)
                         
 ## Note Max is 59 months, ie only children <5
 
