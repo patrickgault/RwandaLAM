@@ -19,16 +19,16 @@ hh_labels_tokeep<-read_excel('Excel/hh_vars_tokeep.xlsx')
 ## Relabels "NA" values (ie variables that have not been decided on yet) as 0
 ## so that they are not selected. From the Excel spreadsheet pulls the list 
 ## of variables to keep and what they should be renamed.
-hh_labels_tokeep$Keep[is.na(hh_labels_tokeep$Keep)]<-0
-data_subset_vars<-hh_labels_tokeep$var[hh_labels_tokeep$Keep==1] 
-data_rename_vars<-hh_labels_tokeep$renamedVar[hh_labels_tokeep$Keep==1] 
+hh_labels_tokeep$Keep[is.na(hh_labels_tokeep$Keep)] <- 0
+data_subset_vars <- hh_labels_tokeep$var[hh_labels_tokeep$Keep==1] 
+data_rename_vars <- hh_labels_tokeep$renamedVar[hh_labels_tokeep$Keep==1] 
 
 ## Creates new clean data frame that is a subset of the overall data frame, 
 ## and renames the variables.
-hh_clean<-hh_all[data_subset_vars]
-names(hh_clean)<-data_rename_vars
+hh_clean <- hh_all[data_subset_vars]
+names(hh_clean) <- data_rename_vars
 
-  hh_clean %>% mutate(hh_clean, 
+  hh_clean <- mutate(hh_clean, 
     # -- Convert sampling rates to appropriate value --
     # -- Recode --
     urban = ifelse(urban == 1, TRUE, # recode rural category to be binary (1 if rural, 0 if urban)
@@ -44,9 +44,9 @@ binary10 <- function(x) {
 }
 
 # report possible values for wash variables  
-summary(hh_clean  %>% select(matches("water|wash")))  
+summary(hh_clean  %>% select(matches("water|_wash")))  
     
-  hh_clean %>% mutate(
+  hh_clean <- mutate(hh_clean,
     # -- Recode "don't know" answers as NA --
     water_treat = binary10(water_treat),
     water_treat_boil = binary10(water_treat_boil),
@@ -55,7 +55,7 @@ summary(hh_clean  %>% select(matches("water|wash")))
     water_treat_filter = binary10(water_treat_filter),
     water_treat_solar = binary10(water_treat_solar),
     water_treat_settle = binary10(water_treat_settle),
-    container_wash = ifelse(container_wash < 8,container_wash,NA)
+    container_wash = ifelse(container_wash < 8, container_wash,NA)
   )
 attr(hh_clean$water_treat,'label')        <- attr(hh$hv237,'label')
 attr(hh_clean$water_treat_boil,'label')   <- attr(hh$hv237a,'label')
@@ -81,7 +81,7 @@ ggplot(hh_clean, aes(x = interview_month)) +
   theme_bw() + 
   ylab('') +
   ggtitle('Number of households interviewed by month')+
-  annotate("text", x = 11, y = 500, label = "main  lean  season", colour = "gray20")
+  annotate("text", x = 11, y = 500, label = "main lean season\n (Oct - Dec)", colour = "gray20")
 
 # For reference below is a link to the Rwanda seasonal calendar
 # Surprising about 40% of households surveyed were interviewed during lean season
