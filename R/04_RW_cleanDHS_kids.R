@@ -5,7 +5,7 @@
 
 ## Reads in excel spreadsheet that states which variables to keep
 ## from kids data set
-kids_labels_tokeep<-read_excel('Excel/kids_labels_tokeep.xlsx')
+kids_labels_tokeep<-read.csv('Excel/kids_labels_tokeep.csv')
 
 ## Relabels "NA" values (ie variables that have not been decided on yet) as 0
 ## so that they are not selected. From the Excel spreadsheet pulls the list 
@@ -29,9 +29,9 @@ kids_clean$cluster_hh_num <- paste(kids_clean$cluster_num, kids_clean$hh_num)
 
 
 ## Replace all 9998 values with NA
-kids_clean <-kids_clean %>% mutate(height_age_zscore = replace(height_age_zscore, 
-
-                                                                                                                             height_age_zscore==9998, NA))
+kids_clean <-kids_clean %>% 
+  mutate(height_age_zscore = replace(height_age_zscore,
+                                     height_age_zscore==9998, NA))
 ## The zscore needs to be divided by 100
 kids_clean$height_age_zscore <- (kids_clean$height_age_zscore / 100)
 
@@ -39,7 +39,7 @@ kids_clean$height_age_zscore <- (kids_clean$height_age_zscore / 100)
 kids_clean$age_calc_months <- (kids_clean$interview_date_cmc - kids_clean$dob_cmc)
 
 # Check z-score versus age
-#library(ggthemes) 
+library(ggthemes) 
 # No noticable difference between boys and girls stunting, does peak around 20 months
 kids_clean %>% mutate(stunted = ifelse(height_age_zscore <= -2, 1, 0)) %>%
   ggplot(aes(x = age_calc_months, y = stunted, colour = factor(sex))) +
@@ -102,6 +102,11 @@ kids_diet[is.na(kids_diet)] <- 0
 
 ## Calculate WDDS
 
+child =  child %>% 
+  mutate(vitA = sum(child_veg_yellow_orange, 
+                    child_fruit_vit_a, na.rm = TRUE))
+
+
 ## Starchy Staples
 DietDiv<-(kids_diet$child_tubers+kids_diet$child_cereals)>0 
 
@@ -112,6 +117,8 @@ DietDiv<-DietDiv+kids_diet$child_veg_dark_green
 
 DietDiv<-DietDiv+((kids_diet$child_veg_yellow_orange+kids_diet$child_fruit_vit_a)>0)
 ## Other Fruit & Veg
+
+
 
 DietDiv<-DietDiv+(kids_diet$child_fruit_other)
 ## Organ meat
