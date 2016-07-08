@@ -58,7 +58,7 @@ kids_clean$age_calc_months <- (kids_clean$interview_date_cmc-kids_clean$dob_cmc)
 ## Sex, 1=male, 2=female
 #table(kids_clean$sex,exclude=NULL)/nrow(kids_clean) #looks good, no NAs, M:50.6% F:49.4%
 
-## 
+## HIIIIII
 
 
 ## Replace all 9998 values with NA
