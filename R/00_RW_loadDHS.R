@@ -13,7 +13,7 @@
 #' * BR: birth data (birth history of all children) --> fertility / mortality rates
 #' * WI: wealth index data (for data before 1990 to calcualte wealth index)
 #'
-#' @author Laura Hughes, lhughes@usaid.gov
+#' @author Laura Hughes, lhughes@usaid.gov and others
 #'
 #' @import dplyr
 #' @import haven
