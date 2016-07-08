@@ -11,14 +11,26 @@ kids_labels_tokeep<-read.csv('Excel/kids_labels_tokeep.csv')
 ## so that they are not selected. From the Excel spreadsheet pulls the list 
 ## of variables to keep and what they should be renamed.
 kids_labels_tokeep$Keep[is.na(kids_labels_tokeep$Keep)] <- 0
-data_subset_vars <- kids_labels_tokeep$var[kids_labels_tokeep$Keep==1] 
-data_rename_vars <- kids_labels_tokeep$renamedVar[kids_labels_tokeep$Keep==1] 
-
+data_subset_vars <- as.character(kids_labels_tokeep$var[kids_labels_tokeep$Keep==1]) 
+data_rename_vars <- as.character(kids_labels_tokeep$renamedVar[kids_labels_tokeep$Keep==1]) 
 
 ## Creates new clean data frame that is a subset of the overall data frame, 
 ## and renames the variables.
 kids_clean <- kids_all[data_subset_vars]
 names(kids_clean) <- data_rename_vars
+
+## Pulls elements needed for re-coding
+kids_clean_labels<-kids_labels[kids_labels$var %in% data_subset_vars,]
+kids_clean_labels$renamedVar<-data_rename_vars
+data.frame(data_subset_vars,data_rename_vars)
+
+
+
+## Function for easily pulling recode info
+#pull_varCodes <- function(varName,mat_labels=kids_clean_labels){
+#  varCodes<-mat_labels$varValues[mat_labels$renamedVar==varName]
+#  return(varCodes)
+#}
 
 
 ## Creates household id variable for merging with hh data set, note
@@ -32,11 +44,16 @@ kids_clean$cluster_hh_num <- paste(kids_clean$cluster_num, kids_clean$hh_num)
 kids_clean <-kids_clean %>% 
   mutate(height_age_zscore = replace(height_age_zscore,
                                      height_age_zscore==9998, NA))
+
+## Histogram of the age distribution of the NA values for stunting, doesn't
+## seem to exhibit a pattern
+hist(kids_clean$age_calc_months[is.na(kids_clean$height_age_zscore)],bins=20)
+
 ## The zscore needs to be divided by 100
 kids_clean$height_age_zscore <- (kids_clean$height_age_zscore / 100)
 
 ### Calculate age by subtracting 
-kids_clean$age_calc_months <- (kids_clean$interview_date_cmc - kids_clean$dob_cmc)
+kids_clean$age_calc_months <- (kids_clean$interview_date_cmc-kids_clean$dob_cmc)
 
 # Check z-score versus age
 library(ggthemes) 
@@ -97,48 +114,34 @@ table(rowSums(is.na(kids_diet)))
 ##Indeces of the rows that are all NAs
 rows_allNAs <- rowSums(is.na(kids_diet)) == 13
 
-## To avoid removing those that only have a couple missing, will put back in rows that are ## all NAs at the end
-kids_diet[is.na(kids_diet)] <- 0
+summary(kids_diet)
 
 ## Calculate WDDS
+## The categories are: 1. Starchy staples (WDDS_starch) 
+##                     2. Dark green leafy vegetables (WDDS_veg_green) 
+##                     3. Other Vitamin A rich fruit and veg (WDDS_vitA)
+##                     4. Other fruit and veg (WDDS_veg_other)
+##                     5. Organ meat (WDDS_organ)
+##                     6. Meat and fish (WDDS_meat_fish)
+##                     7. Eggs (WDDS_eggs)
+##                     8. Legumes, nuts, and seeds (WDDS_legumes)  
+##                     9. Milk and milk products (WDDS_dairy)
+kids_diet =  kids_diet %>% 
+  mutate(WDDS_starch=sum(child_tubers,child_cereals, na.rm=TRUE),
+         WDDS_veg_green=child_veg_dark_green,
+         WDDS_vitA=sum(child_veg_yellow_orange, child_fruit_vit_a, na.rm = TRUE),
+         WDDS_veg_other=child_fruit_other,
+         WDDS_organ=child_meat_organ,
+         WDDS_meat_fish=sum(child_meat,child_fish, na.rm=TRUE),
+         WDDS_eggs=child_eggs,
+         WDDS_legumes=child_legumes_nuts,
+         WDDS_dairy=sum(child_milk,child_milk_products, na.rm=TRUE))
 
-child =  child %>% 
-  mutate(vitA = sum(child_veg_yellow_orange, 
-                    child_fruit_vit_a, na.rm = TRUE))
+kids_diet =  kids_diet %>% 
+  mutate(WDDS_DietDiv=sum(WDDS_starch,WDDS_veg_green,WDDS_vitA,WDDS_veg_other,WDDS_organ,
+                           WDDS_meat_fish,WDDS_eggs,WDDS_legumes,WDDS_dairy))
 
 
-## Starchy Staples
-DietDiv<-(kids_diet$child_tubers+kids_diet$child_cereals)>0 
-
-## Dark Green leafy vegetables
-DietDiv<-DietDiv+kids_diet$child_veg_dark_green 
-
-## Other Vitamin A rich fruit & veg
-
-DietDiv<-DietDiv+((kids_diet$child_veg_yellow_orange+kids_diet$child_fruit_vit_a)>0)
-## Other Fruit & Veg
-
-
-
-DietDiv<-DietDiv+(kids_diet$child_fruit_other)
-## Organ meat
-
-DietDiv<-DietDiv+(kids_diet$child_meat_organ)
-## Meat & fish
-
-DietDiv<-DietDiv+((kids_diet$child_meat+kids_diet$child_fish)>0)
-## Eggs
-
-DietDiv<-DietDiv+kids_diet$child_eggs
-## Legumes, nuts and seeds
-
-DietDiv<-DietDiv+kids_diet$child_legumes_nuts
-## Milk and Milk products
-
-DietDiv<-DietDiv+((kids_diet$child_milk+kids_diet$child_milk_products)>0)
-
-## Putting back in rows that are all NA
-DietDiv[rows_allNAs]<-NA
 
 #DietDiv (3273 NAs, 7856 total)
 #   0    1    2    3    4    5    6    7    8 
