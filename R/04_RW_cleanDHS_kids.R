@@ -3,6 +3,8 @@
 # 16 June 2016
 # (c) 2016 via MIT License
 
+## PULLING VARIABLES WE WANT
+
 ## Reads in excel spreadsheet that states which variables to keep
 ## from kids data set
 kids_labels_tokeep<-read.csv('Excel/kids_labels_tokeep.csv')
@@ -19,41 +21,76 @@ data_rename_vars <- as.character(kids_labels_tokeep$renamedVar[kids_labels_tokee
 kids_clean <- kids_all[data_subset_vars]
 names(kids_clean) <- data_rename_vars
 
-## Pulls elements needed for re-coding
-kids_clean_labels<-kids_labels[kids_labels$var %in% data_subset_vars,]
-kids_clean_labels$renamedVar<-data_rename_vars
-data.frame(data_subset_vars,data_rename_vars)
+## Creates smaller labels matrix with only the relevant info
+kids_clean_labels_temp<-kids_labels[kids_labels$var %in% data_subset_vars,]
+data_subset<-data.frame(var=data_subset_vars,renamedVar=data_rename_vars)
+kids_clean_labels<-join(kids_clean_labels_temp,data_subset,by="var",type="inner")
 
+## Function for easily pulling recode info for a given variable
+pull_varCodes <- function(varName,mat_labels=kids_clean_labels){
+  varCodes<-mat_labels$varValues[mat_labels$renamedVar==varName]
+  return(varCodes)
+}
 
-
-## Function for easily pulling recode info
-#pull_varCodes <- function(varName,mat_labels=kids_clean_labels){
-#  varCodes<-mat_labels$varValues[mat_labels$renamedVar==varName]
-#  return(varCodes)
-#}
-
+## Function for easily pulling descrption for a given variable
+pull_varDescrip <- function(varName,mat_labels=kids_clean_labels){
+  varCodes<-mat_labels$varDescrip[mat_labels$renamedVar==varName]
+  return(varCodes)
+}
 
 ## Creates household id variable for merging with hh data set, note
 ## this is not the same as hhid due to weirdness in spacing of DHS
-## paste job.  It can only be merged with a homemade household id like
-## this one.
+## paste job.  It can only be merged with a homemade household id ## like this one.
 kids_clean$cluster_hh_num <- paste(kids_clean$cluster_num, kids_clean$hh_num)
+
+##RECODING AND CLEANING VARIABLES
+
+## Age in months: calculate from interview date & dob 
+## Note: no NA's in either interview date or dob, and values look normal
+kids_clean$age_calc_months <- (kids_clean$interview_date_cmc-kids_clean$dob_cmc)
+## table(kids_clean$age_calc_months, exclude=NULL) #output looks good, no NAs, min=0 max=59
+## qplot(kids_clean$age_calc_months/12) #looks fairly flat, bump around 6 mo, fewer 4-5
+
+## Wealth Index
+#table(kids_clean$wealth_index,exclude=NULL) #output looks good, no NAs, values are: 1:5
+#qplot(kids_clean$wealth_index, geom="bar") #1 has the most, somewhat flat otherwise
+
+## Sex, 1=male, 2=female
+#table(kids_clean$sex,exclude=NULL)/nrow(kids_clean) #looks good, no NAs, M:50.6% F:49.4%
+
+## 
 
 
 ## Replace all 9998 values with NA
-kids_clean <-kids_clean %>% 
-  mutate(height_age_zscore = replace(height_age_zscore,
-                                     height_age_zscore==9998, NA))
+kids_clean <-kids_clean %>% mutate(height_age_zscore = replace(height_age_zscore,
+                                   height_age_zscore==9998, NA))
 
 ## Histogram of the age distribution of the NA values for stunting, doesn't
 ## seem to exhibit a pattern
 hist(kids_clean$age_calc_months[is.na(kids_clean$height_age_zscore)],bins=20)
 
+
+
+
+
+
+
+##Variable summary:
+## interview_date_cmc: units=cmc
+## dob_cmc: date of birth, units=cmc
+## age_calc_monts: age of child, units=months
+## wealth_index: cumulative wealth, 1=poorest,2=poorer,3=middle,4=richer,5=richest
+
+
+
+
+
+
+
+
 ## The zscore needs to be divided by 100
 kids_clean$height_age_zscore <- (kids_clean$height_age_zscore / 100)
 
-### Calculate age by subtracting 
-kids_clean$age_calc_months <- (kids_clean$interview_date_cmc-kids_clean$dob_cmc)
 
 # Check z-score versus age
 library(ggthemes) 
