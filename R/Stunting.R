@@ -16,13 +16,22 @@ source('04_RW_cleanDHS_kids.R')
 #       and they were the 6th born
 # Note: haven't dealt with twins yet
 
+
+
+
+
+
+
+
+
+
+
 # According to DHS report pg 170 12,699 household completed the survey, which matches
 # nrow(hh_all)
 # Can't figure out why the kids data has the number of rows it has for the life of me!
 
 
 num_kids_vec<-vector(length=length(hhdiff))
-
 for (j in 1:length(hhdiff)){
 print(j)  
 num_kids_vec[j]<-hh_clean[hh_clean$cluster_hh_num==hhdiff[j],]$num_under5
@@ -44,3 +53,36 @@ fit <- lm(height_age_zscore~birth_interval_preceding+mother_highest_education_le
 
 summary(fit)
 
+## Histogram of the age distribution of the NA values for stunting, doesn't
+## seem to exhibit a pattern
+hist(kids_clean$age_calc_months[is.na(kids_clean$height_age_zscore)],bins=20)
+
+# Check z-score versus age
+library(ggthemes) 
+# No noticable difference between boys and girls stunting, does peak around 20 months
+kids_clean %>% mutate(stunted = ifelse(height_age_zscore <= -2, 1, 0)) %>%
+  ggplot(aes(x = age_calc_months, y = stunted, colour = factor(sex))) +
+  #geom_jitter(width = 0.25, height = 0.25) +
+  stat_smooth(method = "loess", se = TRUE, span = 0.75, size = 1.15, alpha = 0.1) + 
+  theme_fivethirtyeight() + ggtitle("stunting appears to peak near 20 months")
+
+# Steady downward trend for stunting and wealth, not surprising
+kids_clean %>% mutate(stunted = ifelse(height_age_zscore <= -2, 1, 0)) %>%
+  ggplot(aes(x = wealth_index, y = stunted, colour = factor(sex))) +
+  #geom_jitter(width = 0.25, height = 0.25) +
+  stat_smooth(method = "loess", se = TRUE, span = 0.75, size = 1.15, alpha = 0.1) + 
+  theme_fivethirtyeight() +
+  ggtitle("stunting declines steadily with wealth (asset accumulation)")
+
+# Finally, break it down by wealth and age category
+# TODO: figure out if 1 is boy or girl!
+kids_clean %>% mutate(stunted = ifelse(height_age_zscore <= -2, 1, 0), 
+                      agegroup = cut(age_calc_months, seq(0, 60, by = 6))) %>%
+  group_by(agegroup, wealth_index, sex) %>% 
+  summarise(stunting = mean(stunted, na.rm = TRUE)) %>% 
+  filter(stunting != 0) %>% 
+  ggplot(aes(x = agegroup, y = wealth_index, fill = stunting)) +
+  geom_tile(colour = 'white',size = 0.25, stat = "identity") +
+  scale_fill_viridis(option="D") +
+  geom_text(aes(y = wealth_index, x = agegroup, label = sprintf("%1.0f%%", round(100*stunting, 2)), size = 1)) +
+  theme_fivethirtyeight() + facet_wrap(~sex, nrow = 2)
