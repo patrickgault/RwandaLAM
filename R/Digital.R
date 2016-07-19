@@ -14,7 +14,7 @@ source('R/simple_plots.R')
 # Simple choropleth maps
 ###############################################################################
 
-adm2_map(hh_clean,'landline')
+adm2_map(hh_clean,'telephone')
 # Landlines are rare everywhere; highest penetration is around Kigali but
 # still only ~1.5%
 
@@ -44,7 +44,7 @@ adm2_map(hh_clean,'electricity')
 # explain the lack of TVs and computers -- devices outside the capital are
 # things like mobiles and radios that can run on batteries.
 
-adm2_map(hh_clean,'wealth')
+adm2_map(hh_clean,'wealth_index')
 # So the concentration of some goods in Kigali could have as much to do with
 # household wealth as with infrastructure. Separating the two out might
 # take some work.
@@ -54,9 +54,7 @@ adm2_map(hh_clean,'wealth')
 ###############################################################################
 
 # Which assets are most predictive of mobile phone ownership?
-# TODO: Depending on how the code to put together hh_clean ends up looking,
-#       it might not be necessary to create a new data frame here; I could 
-#       just use hh_clean.
+# TODO: Use hh_clean instead of assets.
 assets <- hh_all %>% 
   select(hv205:hv212,hv213:hv215,hv221,hv227,hv242:hv244,hv246,hv247,
          sh110g,sh118f) %>%

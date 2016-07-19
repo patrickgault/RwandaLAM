@@ -56,7 +56,7 @@ adm2_map <- function(df,x,low_color='ivory',high_color='olivedrab') {
   adm2_avg <- tmp %>% 
     join(geo_clean,by='cluster_num') %>%
     group_by(district) %>%
-    summarise(val=mean(val,na.rm=TRUE)) %>%
+    dplyr::summarise(val=mean(val,na.rm=TRUE)) %>%
     mutate(NAME_2=as.character(district)) 
   plotme <- join(rwanda.adm2,adm2_avg,by='NAME_2')
   ggplot(plotme) +
