@@ -54,24 +54,24 @@ adm2_map(hh_clean,'wealth_index')
 ###############################################################################
 
 # Which assets are most predictive of mobile phone ownership?
-# TODO: Use hh_clean instead of assets.
-assets <- hh_all %>% 
-  select(hv205:hv212,hv213:hv215,hv221,hv227,hv242:hv244,hv246,hv247,
-         sh110g,sh118f) %>%
+assets <- hh_clean %>% 
+  select(toilet_type,electricity,radio,tv,fridge,bike,motorcycle,car,
+         floor_material,wall_material,roof_material,telephone,mosquito_net,
+         kitchen,mobile,watch,cart,motorboat,livestock,bank,computer,boat) %>%
   mutate(
     # single out the most popular types of toilets
-    pit_toilet = as.numeric(hv205 > 19 & hv205 < 24),
-    no_toilet = as.numeric(hv205 == 31),
-    flush_toilet = as.numeric(hv205 < 16),
+    pit_toilet = as.numeric(toilet_type > 19 & toilet_type < 24),
+    no_toilet = as.numeric(toilet_type == 31),
+    flush_toilet = as.numeric(toilet_type < 16),
     # floor materials
-    earth_floor = as.numeric(hv213 < 21),
-    improved_floor = as.numeric(hv213 > 20),
+    earth_floor = as.numeric(floor_material < 21),
+    improved_floor = as.numeric(floor_material > 20),
     # roof materials
-    simple_roof = as.numeric(hv215 < 31),
-    metal_roof = as.numeric(hv215 == 31),
-    nice_roof = as.numeric(hv215 > 31)
+    simple_roof = as.numeric(roof_material < 31),
+    metal_roof = as.numeric(roof_material == 31),
+    nice_roof = as.numeric(roof_material > 31)
   ) %>%
-  select(hv206:hv212,hv221:nice_roof)
+  select(electricity:car,telephone:nice_roof)
 
 nrow(na.omit(assets)) / nrow(assets)
 # Only 24.6% contain no missing values; we'll need to do some imputation here
@@ -79,8 +79,8 @@ nrow(na.omit(assets)) / nrow(assets)
 library(mice)
 assets_imp <- mice(assets)
 
-form <-  select(assets,-hv243a) %>% names() %>% 
-  paste(collapse=' + ') %>% paste('hv243a ~ ',.,collapse='')
+form <-  select(assets,-mobile) %>% names() %>% 
+  paste(collapse=' + ') %>% paste('mobile ~ ',.,collapse='')
 
 fit_assets <- with(data=assets_imp,exp=glm(as.formula(form),family=binomial(link='logit')))
 summary(fit_assets)
@@ -92,11 +92,10 @@ summary(fit_assets)
 # Mobile phone ownership is 61.1%
 
 # For each asset, what is the wealth index level at which people are
-# more likely to own one than not to? Do these rankings change between
-# 2010 and 2014?
+# more likely to own one than not to? 
 
-assets$wealth <- hh_all$hv271
-ggplot(assets,aes(wealth,hv243a)) +
+assets$wealth <- hh_clean$wealth_score
+ggplot(assets,aes(wealth,mobile)) +
   geom_jitter(size=4,color='tomato',alpha=0.1,width=0,height=0.4) +
   geom_smooth(method = "glm", method.args = list(family = "binomial")) +
   theme_classic() +
@@ -104,10 +103,6 @@ ggplot(assets,aes(wealth,hv243a)) +
 
 # Be more systematic
 good_assets <- ldply(names(select(assets,-wealth)),function(n) {
-  label <- n
-  if (n %in% hh_labels$var) {
-    label <- hh_labels[hh_labels$var==n,'varDescrip']
-  }
   f <- paste(n,' ~ wealth',collapse='') %>% as.formula()
   s <- glm(f,family=binomial(link='logit'),data=assets) %>% summary()
   w50 <- -s$coefficients[1,1]/s$coefficients[2,1]
@@ -118,7 +113,7 @@ good_assets <- ldply(names(select(assets,-wealth)),function(n) {
   data.frame(label=label,n=n,in_range=in_range,pos=pos,w50=w50)
 }) %>%
   filter(in_range & pos) %>%
-  select(label,n,w50) %>%
+  select(n,w50) %>%
   mutate(x=0,w50=w50/1e5) %>%
   arrange(w50)
 good_assets
@@ -127,7 +122,7 @@ good_assets
 # they invest in is a corrugated metal roof, and the next is a mobile phone.
 
 y_nudges <- c(0,0,0,0,0,0,-0.04,0.04,0,-0.05,0.05,0.02)
-ggplot(good_assets,aes(x=x,y=w50,label=label)) +
+ggplot(good_assets,aes(x=x,y=w50,label=n)) +
   geom_point(size=5,color='gray59') +
   geom_text(hjust=1,nudge_x=-0.03,nudge_y=y_nudges) +
   scale_x_continuous(limits=c(-0.3,1)) +
@@ -196,6 +191,8 @@ assets2010 <- hh2010 %>%
 
 # Compare adoption rates for 2010 and 2014
 # TODO: I'm not sure exactly how to adjust these for sampling weights
+# TODO: This isn't going to work until the 2010 variables have
+#       the same names as the 2014-5 variables.
 
 adoption_plot <- function(q) {
   plotme <- good_assets %>% select(label,n) %>%
