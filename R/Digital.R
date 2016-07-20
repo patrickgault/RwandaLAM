@@ -70,7 +70,9 @@ adm2_map(hh_clean,'wealth_score')
 assets <- hh_clean %>% 
   select(toilet_type,electricity,radio,tv,fridge,bike,motorcycle,car,
          floor_material,wall_material,roof_material,telephone,mosquito_net,
-         kitchen,mobile,watch,cart,motorboat,livestock,bank,computer,boat) %>%
+         kitchen,mobile,watch,cart,motorboat,livestock,bank,computer,boat,
+         wealth_score) %>%
+  rename(wealth=wealth_score) %>%
   mutate(
     # single out the most popular types of toilets
     pit_toilet = as.numeric(toilet_type > 19 & toilet_type < 24),
@@ -89,7 +91,6 @@ assets <- hh_clean %>%
 nrow(na.omit(assets)) / nrow(assets)
 # Only 24.6% contain no missing values; we'll need to do some imputation here
 
-library(mice)
 assets_imp <- mice(assets)
 
 form <-  select(assets,-mobile) %>% names() %>% 
@@ -97,12 +98,12 @@ form <-  select(assets,-mobile) %>% names() %>%
 
 fit_assets <- with(data=assets_imp,exp=glm(as.formula(form),family=binomial(link='logit')))
 summary(fit_assets)
-# The strongest correlations seem to be with 
-#   hv207 - radio (55.3%)
-#   hv247 - bank account (47.9%)
-#   hv210 - bicycle (14.1%)
-#   hv206 - electricity (25.1%)
-# Mobile phone ownership is 61.1%
+# Including the wealth index lets us ask which other assets mobile owners are
+# likely to own, independent of wealth.
+# Wealth on its own is the strongest correlation, followed by radios, bicycles,
+# in-home kitchens, and bank accounts.
+adm2_map(hh_clean,'bike')
+# Bicycles, it turns out, are only common in the east.
 
 # For each asset, what is the wealth index level at which people are
 # more likely to own one than not to? 
@@ -158,9 +159,6 @@ ggplot(good_assets,aes(x=x,y=w50,label=n)) +
 # get a 2010 data frame that is cleaned according to (almost) the same
 # protocol and we're not loading in new data here.
 
-# TODO use the na_if() function in the new dplyr.
-
-library(haven)
 hh2010 <- read_dta('Datain/RW_2010_DHS/rwhr61dt/RWHR61FL.DTA')
 hh2010_labels = pullAttributes(hh2010) %>% 
   mutate(module = 'hh', rowNum = row_number())
@@ -437,8 +435,6 @@ write.csv(cluster_gp,'GIS/mobile-vars.csv',row.names=FALSE)
 ###############################################################################
 # Compare DHS indicators with WB data
 ###############################################################################
-
-library(WDI)
 
 ##### Electricity access ------------------------------------------------------
 elec <- WDI(country='RW',indicator='EG.ELC.ACCS.ZS',start=1960,end=2015) %>% 

@@ -3,11 +3,6 @@
 # 10 June 2016
 # (c) 2016 via MIT License
 
-library(rgeos)
-library(rgdal)
-library(maptools)
-
-
 # select relevant variables -----------------------------------------------
 
 geo_clean = geo %>% 

@@ -25,7 +25,8 @@
 #'
 
 # Import/Load packages ----------------------------------------------------
-pkgs = c('dplyr', 'haven', 'tidyr', 'ggplot2', 'readxl', 'foreign', 'data.table', 'stringr')
+pkgs = c('dplyr', 'haven', 'tidyr', 'ggplot2', 'readxl', 'foreign', 
+         'data.table', 'stringr','WDI','mice','maptools','rgeos','rgdal')
 
 # Check if packages are installed
 alreadyInstalled = installed.packages()[, "Package"]
@@ -41,7 +42,7 @@ if (length(toInstall > 0)) {
 
 # Load packages
 for (i in seq_along(pkgs)) {
-  library(pkgs[i], character.only = TRUE, quietly = quiet)
+  library(pkgs[i], character.only = TRUE, quietly = FALSE)
 }
 
 
@@ -92,7 +93,7 @@ setRwWD = function(user = 'Nada',
 }  
 
 
-path = setRwWD(user = 'Nada')
+path = setRwWD(user = 'Craig')
 
 # Import raw data ---------------------------------------------------------
 
