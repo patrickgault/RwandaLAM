@@ -108,7 +108,6 @@ adm2_map(hh_clean,'bike')
 # For each asset, what is the wealth index level at which people are
 # more likely to own one than not to? 
 
-assets$wealth <- hh_clean$wealth_score
 ggplot(assets,aes(wealth,mobile)) +
   geom_jitter(size=4,color='tomato',alpha=0.1,width=0,height=0.4) +
   geom_smooth(method = "glm", method.args = list(family = "binomial")) +
@@ -124,7 +123,7 @@ good_assets <- ldply(names(select(assets,-wealth)),function(n) {
   haves <- assets[assets[,n]==1,'wealth']
   have_nots <- assets[assets[,n]==0,'wealth']
   pos <- mean(haves,na.rm=TRUE) > mean(have_nots,na.rm=TRUE)
-  data.frame(label=label,n=n,in_range=in_range,pos=pos,w50=w50)
+  data.frame(n=n,in_range=in_range,pos=pos,w50=w50)
 }) %>%
   filter(in_range & pos) %>%
   select(n,w50) %>%
@@ -155,9 +154,6 @@ ggplot(good_assets,aes(x=x,y=w50,label=n)) +
 # many people are likely to have each asset.
 
 # What has changed since 2010?
-# TODO: Maybe we should copy the initial data cleaning code so that we
-# get a 2010 data frame that is cleaned according to (almost) the same
-# protocol and we're not loading in new data here.
 
 hh2010 <- read_dta('Datain/RW_2010_DHS/rwhr61dt/RWHR61FL.DTA')
 hh2010_labels = pullAttributes(hh2010) %>% 
@@ -167,23 +163,23 @@ assets2010 <- hh2010 %>%
          sh110g,sh118f,hv271) %>%
   mutate(
     # fix NAs
-    hv206 = ifelse(hv206==9,NA,hv206),
-    hv207 = ifelse(hv207==9,NA,hv207),
-    hv208 = ifelse(hv208==9,NA,hv208),
-    hv209 = ifelse(hv209==9,NA,hv209),
-    hv210 = ifelse(hv210==9,NA,hv210),
-    hv211 = ifelse(hv211==9,NA,hv211),
-    hv212 = ifelse(hv212==9,NA,hv212),
-    hv221 = ifelse(hv221==9,NA,hv221),
-    hv227 = ifelse(hv227==9,NA,hv227),
-    hv242 = ifelse(hv242==9,NA,hv242),
-    hv243a = ifelse(hv243a==9,NA,hv243a),
-    hv243b = ifelse(hv243b==9,NA,hv243b),
-    hv243c = ifelse(hv243c==9,NA,hv243c),
-    hv243d = ifelse(hv243d==9,NA,hv243d),
-    hv247 = ifelse(hv247==9,NA,hv247),
-    sh110g = ifelse(sh110g==9,NA,sh110g),
-    sh118f = ifelse(sh118f==9,NA,sh118f),
+    electricity = ifelse(hv206==9,NA,hv206),
+    radio = ifelse(hv207==9,NA,hv207),
+    tv = ifelse(hv208==9,NA,hv208),
+    fridge = ifelse(hv209==9,NA,hv209),
+    bike = ifelse(hv210==9,NA,hv210),
+    motorcycle = ifelse(hv211==9,NA,hv211),
+    car = ifelse(hv212==9,NA,hv212),
+    telephone = ifelse(hv221==9,NA,hv221),
+    mosquito_net = ifelse(hv227==9,NA,hv227),
+    kitchen = ifelse(hv242==9,NA,hv242),
+    mobile = ifelse(hv243a==9,NA,hv243a),
+    watch = ifelse(hv243b==9,NA,hv243b),
+    cart = ifelse(hv243c==9,NA,hv243c),
+    motorboat = ifelse(hv243d==9,NA,hv243d),
+    bank = ifelse(hv247==9,NA,hv247),
+    computer = ifelse(sh110g==9,NA,sh110g),
+    boat = ifelse(sh118f==9,NA,sh118f),
     # single out the most popular types of toilets
     pit_toilet = as.numeric(hv205 > 19 & hv205 < 24),
     no_toilet = as.numeric(hv205 == 31),
@@ -197,28 +193,28 @@ assets2010 <- hh2010 %>%
     nice_roof = as.numeric(hv215 > 31)
   ) %>%
   rename(wealth=hv271) %>%
-  select(hv206:hv212,hv221:nice_roof) %>%
+  select(electricity:car,telephone:nice_roof) %>%
   removeAttributes()
 
 # Compare adoption rates for 2010 and 2014
 # TODO: I'm not sure exactly how to adjust these for sampling weights
-# TODO: This isn't going to work until the 2010 variables have
-#       the same names as the 2014-5 variables.
 
 adoption_plot <- function(q) {
-  plotme <- good_assets %>% select(label,n) %>%
-    adply(1,function(x) {
+  plotme <- good_assets %>% select(n) %>%
+    plyr::adply(1,function(x) {
       v <- as.character(x$n)
+      m10 <- mean(assets2010[hh2010$hv270 %in% q,v],na.rm=TRUE)
+      m15 <- mean(assets[hh$hv270 %in% q,v],na.rm=TRUE)
       mutate(x,
-        mean_10 = mean(assets2010[hh2010$hv270 %in% q,v],na.rm=TRUE),
-        mean_15 = mean(assets[hh$hv270 %in% q,v],na.rm=TRUE)
+        mean_10 = m10,
+        mean_15 = m15
       )
     }) %>%
-    melt(id.vars=c('label','n')) %>%
+    melt(id.vars=c('n')) %>%
     mutate(x=ifelse(variable=='mean_10',0,1))
-  ggplot(plotme,aes(x,value,group=label,label=label)) +
-    geom_point(aes(color=label),size=5) +
-    geom_line(aes(color=label),size=3,alpha=0.6) +
+  ggplot(plotme,aes(x=x,y=value,group=n,label=n)) +
+    geom_point(aes(color=n),size=5) +
+    geom_line(aes(color=n),size=3,alpha=0.6) +
     geom_text(hjust=1,nudge_x=-0.03) +
     scale_x_continuous(limits=c(-0.5,1)) +
     theme(title = element_blank(), axis.title = element_blank(), 
@@ -246,7 +242,8 @@ adoption_plot(1)
 adoption_plot(5)
 
 # The wealthiest Rwandans are mighty close to mobile saturation, but things
-# like flush toilets are still pretty rare.
+# like flush toilets are still pretty rare. Biggest change for this group
+# since 2010 has been electrification.
 
 # Which household demographics are most predictive of mobile ownership?
 
