@@ -149,11 +149,17 @@ ggplot(good_assets,aes(x=x,y=w50,label=n)) +
 # don't necessarily match up well. Instead, just look at adoption rates
 # for each of these wealth-level-defining goods.
 
-# TODO: Instead of a vertical plot against nothing, it might be nice
+# Instead of a vertical plot against nothing, it might be nice
 # to combine this with a histogram of wealth levels, so we can see how
 # many people are likely to have each asset.
-
-# What has changed since 2010?
+plotme <- assets %>% transmute(wealth=wealth/1e5)
+ggplot(plotme,aes(x=wealth)) +
+  geom_density(fill='goldenrod',color=NA,alpha=0.5) +
+  geom_point(data=good_assets,aes(x=w50,y=0.1),size=5,color='gray59') +
+  geom_text(data=good_assets,aes(x=w50,y=0.1,label=n),
+            hjust=0,nudge_y=0.03,nudge_x=2*y_nudges) +
+  coord_flip() +
+  theme_classic()
 
 hh2010 <- read_dta('Datain/RW_2010_DHS/rwhr61dt/RWHR61FL.DTA')
 hh2010_labels = pullAttributes(hh2010) %>% 
@@ -351,7 +357,8 @@ wm[wm$value > 1,'value'] <- 1 # growth stops at 100%
 
 ggplot(wm,aes(x=x,y=value,group=wquint,color=wquint)) +
   geom_point(size=5) +
-  geom_line(size=3) +
+  geom_line(data=wm %>% filter(variable != 'm2020'),size=3) +
+  geom_line(data=wm %>% filter(variable != 'm2010'),size=3,linetype=3) +
   scale_color_distiller(palette='Spectral') +
   scale_x_continuous(breaks=c(2010,2015,2020)) +
   ggtitle('Mobile ownership by wealth quintile (projected)') +
@@ -365,8 +372,6 @@ ggplot(wm,aes(x=x,y=value,group=wquint,color=wquint)) +
 # World Bank data suggests that the growth in the number of mobile 
 # subscriptions has been linear since about 2007; continued linear growth out
 # to 2020 (at least among populations not near saturation) seems reasonable.
-
-# TODO: make the lines thin/dotted between 2015 and 2020
 
 # Choropleth map of changes in asset adoption rates
 
@@ -440,7 +445,7 @@ elec <- WDI(country='RW',indicator='EG.ELC.ACCS.ZS',start=1960,end=2015) %>%
   mutate(val=EG.ELC.ACCS.ZS,source='WB') %>%
   select(val,year,source) 
 
-dhs_elec <- loadDHS(breakdown='national',indicators='HC_ELEC_H_ELC',countries='RW') %>%
+dhs_elec <- llamar::loadDHS(breakdown='national',indicators='HC_ELEC_H_ELC',countries='RW') %>%
   select(Value,SurveyYear) %>%
   rename(val=Value,year=SurveyYear) %>%
   mutate(source='DHS')
@@ -463,7 +468,8 @@ mobile <- WDI(country='RW',indicator='IT.CEL.SETS.P2',start=1960,end=2015) %>%
   select(val,year,source) %>%
   filter(year > 1998)
 
-dhs_mobile <- loadDHS(breakdown='national',indicators='HC_HEFF_H_MPH',countries='RW') %>%
+dhs_mobile <- llamar::loadDHS(breakdown='national',indicators='HC_HEFF_H_MPH',
+                              countries='RW') %>%
   select(Value,SurveyYear) %>%
   rename(val=Value,year=SurveyYear) %>%
   mutate(source='DHS')
@@ -489,7 +495,8 @@ phone <- WDI(country='RW',indicator='IT.MLT.MAIN.P2',start=1960,end=2015) %>%
   mutate(val=IT.MLT.MAIN.P2,source='WB') %>%
   select(val,year,source)
 
-dhs_phone <- loadDHS(breakdown='national',indicators='HC_HEFF_H_NPH',countries='RW') %>%
+dhs_phone <- llamar::loadDHS(breakdown='national',indicators='HC_HEFF_H_NPH',
+                             countries='RW') %>%
   select(Value,SurveyYear) %>%
   rename(val=Value,year=SurveyYear) %>%
   mutate(source='DHS')
