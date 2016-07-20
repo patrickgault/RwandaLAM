@@ -3,8 +3,6 @@
 # 10 June 2016
 # (c) 2016 via MIT License
 
-library(ggplot2)
-
 # basic info --------------------------------------------------------------
 
 # TODO: Add some data quality checks for hh_vars_tokeep.xlsx

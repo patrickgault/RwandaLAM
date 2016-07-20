@@ -3,12 +3,6 @@
 # 20 June 2016
 # (c) 2016 via MIT License
 
-library(maptools)
-library(plyr)
-library(dplyr)
-library(ggplot2)
-library(llamar)
-
 ###############################################################################
 # Bar plot for categorical variables
 ###############################################################################
@@ -54,14 +48,14 @@ make_adm2_avg <- function(df,x) {
   tmp <- df[,c('cluster_num',x)]
   names(tmp)[2] <- 'val'
   tmp %>% 
-    join(geo_clean,by='cluster_num') %>%
+    plyr::join(geo_clean,by='cluster_num') %>%
     group_by(district) %>%
     dplyr::summarise(val=mean(val,na.rm=TRUE)) %>%
     mutate(NAME_2=as.character(district))   
 }
 
 make_map <- function(avg_df,low_color,high_color,title='') {
-  plotme <- join(rwanda.adm2,avg_df,by='NAME_2')
+  plotme <- plyr::join(rwanda.adm2,avg_df,by='NAME_2')
   ggplot(plotme) +
     aes(long,lat,group=group,fill=val) +
     geom_polygon() +
