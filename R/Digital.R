@@ -250,29 +250,35 @@ adoption_plot(5)
 # NOTE: hv106-9 all measure education level with slightly different categories
 # Choose the one that gets me the best AIC.
 
-demo <- hh_all %>%
-  select(hv243a,hv009,hv014,hv025,hv219,hv220,hv106_01,hv115_01) %>%
-  mutate(married = hv115_01 == 1) %>%
-  select(-hv115_01)
+demo <- hh_clean %>%
+  select(mobile,num_members,num_under5,urban,sex_head,age_head,ed_head,marital_head) %>%
+  mutate(married = marital_head == 1,
+         peeps_lt4 = num_members < 4,
+         no_ed = ed_head == 0,
+         primary_ed = ed_head > 0) %>%
+  select(-marital_head,-ed_head,-num_members)
 
-fit_demo <- glm(hv243a ~ .,family=binomial(link='logit'),data=demo)
+
+
+fit_demo <- glm(mobile ~ .,family=binomial(link='logit'),data=demo)
 summary(fit_demo)
 
 
 # Strongest correlations:
-#    hv106_01 - more educated HoH
-#    hv025 - urban 
-#    hv009 - more people in house
-#    hv014 - fewer kids
-#    hv115_01==1 married
-#    hv220 - younger HoH
-#    hv219 - male HoH - not significant!
+#    more educated HoH
+#    urban 
+#    more people in house
+#    fewer kids
+#    married
+#    younger HoH
+#    male HoH - not significant!
 
 # How many stay significant when we factor in wealth?
 demo_wealth <- cbind(demo,assets[,'wealth']/1e6)
-glm(hv243a ~ .,family=binomial(link='logit'),data=demo_wealth) %>%
+glm(mobile ~ .,family=binomial(link='logit'),data=demo_wealth) %>%
   summary()
-# Most correlations still hold up, except for being married.
+# Most correlations still hold up, except for being married. Being urban
+# also becomes a lot less significant.
 
 # Compare with 2010 -- how does adoption growth differ among demographics?
 
@@ -281,17 +287,14 @@ demo_2010 <- hh2010 %>%
   mutate(married = hv115_01 == 1,
          no_ed = hv106_01 == 0,
          primary_ed = hv106_01 > 0 & hv106_01 < 9,
-         peeps_lt4 = hv009 < 4) %>%
-  select(-hv115_01) %>%
-  select(-hv106_01) %>%
+         peeps_lt4 = hv009 < 4,
+         urban = hv025==1) %>%
+  select(-hv115_01,-hv106_01,-hv009,-hv025) %>%
+  rename(mobile=hv243a,
+         num_under5=hv014,
+         sex_head=hv219,
+         age_head=hv220) %>%
   removeAttributes()
-# TODO: Move this up to original definition of demo
-demo <- demo %>%
-  mutate(peeps_lt4 = hv009 < 4,
-         no_ed = hv106_01 == 0,
-         primary_ed = hv106_01 > 0) %>%
-  select(-hv106_01)
-
 
 demo_avg <- function(name,select_var,select_val,var,group=NULL) {
   v2015 <- mean(demo[demo[,select_var]==select_val,var],na.rm=TRUE)
@@ -299,14 +302,14 @@ demo_avg <- function(name,select_var,select_val,var,group=NULL) {
   data.frame(name=name,v2010=v2010,v2015=v2015,group=group)
 }
 
-demo_adoption <- demo_avg('urban','hv025',1,'hv243a',1) %>%
-  rbind(demo_avg('rural','hv025',2,'hv243a',1)) %>%
-  rbind(demo_avg('< primary ed','no_ed',TRUE,'hv243a',2)) %>%
-  rbind(demo_avg('>= primary ed','primary_ed',TRUE,'hv243a',2)) #%>%
-  #rbind(demo_avg('fewer people','peeps_lt4',TRUE,'hv243a',3)) %>%
-  #rbind(demo_avg('more people','peeps_lt4',FALSE,'hv243a',3)) %>%
-  #rbind(demo_avg('married','married',TRUE,'hv243a',4)) %>%
-  #rbind(demo_avg('unmarried','married',FALSE,'hv243a',4)) 
+demo_adoption <- demo_avg('urban','urban',TRUE,'mobile',1) %>%
+  rbind(demo_avg('rural','urban',FALSE,'mobile',1)) %>%
+  rbind(demo_avg('< primary ed','no_ed',TRUE,'mobile',2)) %>%
+  rbind(demo_avg('>= primary ed','primary_ed',TRUE,'mobile',2)) %>%
+  rbind(demo_avg('fewer people','peeps_lt4',TRUE,'mobile',3)) %>%
+  rbind(demo_avg('more people','peeps_lt4',FALSE,'mobile',3)) %>%
+  rbind(demo_avg('married','married',TRUE,'mobile',4)) %>%
+  rbind(demo_avg('unmarried','married',FALSE,'mobile',4)) 
 
 plotme <- melt(demo_adoption,id.vars=c('name','group')) %>%
   mutate(x=ifelse(variable=='v2010',0,1))
@@ -326,11 +329,9 @@ ggplot(plotme,aes(x=x,y=value,group=name,color=group,label=name)) +
 # Adoption has grown for all demographics; the largest gaps are due to
 # income and education.
 
-# TODO: Refactor this as a function that can create a slopeplot like this
-# for other assets, not just mobile adoption.
-
-# TODO: Make something similar that shows adoption rates for a single 
-# asset across wealth quintiles.
+###############################################################################
+# Show adoption rates for a single asset across wealth quintiles.
+###############################################################################
 
 wm2010 <- hh2010 %>%
   select(hv243a,hv270) %>%
@@ -360,12 +361,12 @@ ggplot(wm,aes(x=x,y=value,group=wquint,color=wquint)) +
         plot.background = element_blank(), legend.position = "none")
 # Ownership goes up across all wealth quintiles, but it appears the poorest 20%
 # are being somewhat left behind; everyone else looks on track to converge at
-# very high saturation after 2020.
+# very high saturation shortly after 2020.
 # World Bank data suggests that the growth in the number of mobile 
 # subscriptions has been linear since about 2007; continued linear growth out
 # to 2020 (at least among populations not near saturation) seems reasonable.
 
-# TODO: make the lines thin/dotted between 2015 and 2020; add years on x-axis
+# TODO: make the lines thin/dotted between 2015 and 2020
 
 # Choropleth map of changes in asset adoption rates
 
@@ -380,12 +381,12 @@ simpleCap <- function(x) {
 cap_names10 <- sapply(names(key10),simpleCap)
 dist_2010 <- cap_names10[match(hh2010$shdistr,key10)] %>% as.vector()
 
-tmp2010 <- data.frame(district=dist_2010,mobile=assets2010$hv243a) %>%
+tmp2010 <- data.frame(district=dist_2010,mobile=assets2010$mobile) %>%
   group_by(district) %>%
   summarise(m2010 = mean(mobile,na.rm=TRUE)) %>%
   mutate(district=as.character(district))
-dist_mobile <- data.frame(cluster_id=hh_all$hv001,mobile=hh_all$hv243a) %>%
-  join(geo_clean[,c('cluster_id','district')],by='cluster_id') %>%
+dist_mobile <- data.frame(cluster_num=hh_all$hv001,mobile=hh_all$hv243a) %>%
+  join(geo_clean[,c('cluster_num','district')],by='cluster_num') %>%
   group_by(district) %>%
   summarize(m2015 = mean(mobile,na.rm=TRUE)) %>%
   mutate(district=as.character(district)) %>%
@@ -416,16 +417,16 @@ ggplot(plotme) +
 ###############################################################################
 
 cluster_gp <- hh_clean %>%
-  group_by(cluster_id) %>%
-  summarise(landline=mean(landline,na.rm=TRUE),
+  group_by(cluster_num) %>%
+  summarise(telephone=mean(telephone,na.rm=TRUE),
             mobile=mean(mobile,na.rm=TRUE),
             computer=mean(computer,na.rm=TRUE),
             tv=mean(tv,na.rm=TRUE),
             radio=mean(radio,na.rm=TRUE),
             electricity=mean(electricity,na.rm=TRUE),
             bank=mean(bank,na.rm=TRUE)) %>%
-  join(geo_clean,by='cluster_id') %>%
-  select(lat,lon,landline:bank)
+  join(geo_clean,by='cluster_num') %>%
+  select(lat,lon,telephone:bank)
  
 write.csv(cluster_gp,'GIS/mobile-vars.csv',row.names=FALSE)
 
