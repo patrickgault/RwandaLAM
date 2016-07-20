@@ -19,8 +19,21 @@ adm2_map(hh_clean,'telephone')
 # still only ~1.5%
 
 adm2_map(hh_clean,'mobile')
+# Lowest penetration in the SW
 mean(hh_clean$mobile,na.rm=TRUE)
-# 90% of households in greater Kigali have a mobile, compared to 61% nationwide
+hh_clean$mobile %>% mean(na.rm=TRUE)  # 61% penetration
+gap_map(hh_clean %>% filter(sex_head==1),
+        hh_clean %>% filter(sex_head==2),
+        'mobile',title='Mobile ownership gender gap')
+hh_clean %>% mutate(w1=wealth_index==1) %>% adm2_map('w1')
+# More of the poorest 20% live in the west
+gap_map(hh_clean %>% filter(wealth_index > 1),
+        hh_clean %>% filter(wealth_index == 1),
+        'mobile',title='Mobile ownership wealth gap')
+# Mobile ownership wealth gap seems larger in the east, but that could 
+# just be because there are more generally wealthy people around there.
+# I wonder if this might be better approached with spatial regression;
+# where is the relationship between wealth and mobile ownership strongest?
 
 adm2_map(hh_clean,'computer')
 # quite rare everywhere except Kigali
@@ -44,7 +57,7 @@ adm2_map(hh_clean,'electricity')
 # explain the lack of TVs and computers -- devices outside the capital are
 # things like mobiles and radios that can run on batteries.
 
-adm2_map(hh_clean,'wealth_index')
+adm2_map(hh_clean,'wealth_score')
 # So the concentration of some goods in Kigali could have as much to do with
 # household wealth as with infrastructure. Separating the two out might
 # take some work.
