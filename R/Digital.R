@@ -14,13 +14,26 @@ source('R/simple_plots.R')
 # Simple choropleth maps
 ###############################################################################
 
-adm2_map(hh_clean,'landline')
+adm2_map(hh_clean,'telephone')
 # Landlines are rare everywhere; highest penetration is around Kigali but
 # still only ~1.5%
 
 adm2_map(hh_clean,'mobile')
+# Lowest penetration in the SW
 mean(hh_clean$mobile,na.rm=TRUE)
-# 90% of households in greater Kigali have a mobile, compared to 61% nationwide
+hh_clean$mobile %>% mean(na.rm=TRUE)  # 61% penetration
+gap_map(hh_clean %>% filter(sex_head==1),
+        hh_clean %>% filter(sex_head==2),
+        'mobile',title='Mobile ownership gender gap')
+hh_clean %>% mutate(w1=wealth_index==1) %>% adm2_map('w1')
+# More of the poorest 20% live in the west
+gap_map(hh_clean %>% filter(wealth_index > 1),
+        hh_clean %>% filter(wealth_index == 1),
+        'mobile',title='Mobile ownership wealth gap')
+# Mobile ownership wealth gap seems larger in the east, but that could 
+# just be because there are more generally wealthy people around there.
+# I wonder if this might be better approached with spatial regression;
+# where is the relationship between wealth and mobile ownership strongest?
 
 adm2_map(hh_clean,'computer')
 # quite rare everywhere except Kigali
@@ -44,7 +57,7 @@ adm2_map(hh_clean,'electricity')
 # explain the lack of TVs and computers -- devices outside the capital are
 # things like mobiles and radios that can run on batteries.
 
-adm2_map(hh_clean,'wealth')
+adm2_map(hh_clean,'wealth_score')
 # So the concentration of some goods in Kigali could have as much to do with
 # household wealth as with infrastructure. Separating the two out might
 # take some work.
@@ -54,26 +67,24 @@ adm2_map(hh_clean,'wealth')
 ###############################################################################
 
 # Which assets are most predictive of mobile phone ownership?
-# TODO: Depending on how the code to put together hh_clean ends up looking,
-#       it might not be necessary to create a new data frame here; I could 
-#       just use hh_clean.
-assets <- hh_all %>% 
-  select(hv205:hv212,hv213:hv215,hv221,hv227,hv242:hv244,hv246,hv247,
-         sh110g,sh118f) %>%
+assets <- hh_clean %>% 
+  select(toilet_type,electricity,radio,tv,fridge,bike,motorcycle,car,
+         floor_material,wall_material,roof_material,telephone,mosquito_net,
+         kitchen,mobile,watch,cart,motorboat,livestock,bank,computer,boat) %>%
   mutate(
     # single out the most popular types of toilets
-    pit_toilet = as.numeric(hv205 > 19 & hv205 < 24),
-    no_toilet = as.numeric(hv205 == 31),
-    flush_toilet = as.numeric(hv205 < 16),
+    pit_toilet = as.numeric(toilet_type > 19 & toilet_type < 24),
+    no_toilet = as.numeric(toilet_type == 31),
+    flush_toilet = as.numeric(toilet_type < 16),
     # floor materials
-    earth_floor = as.numeric(hv213 < 21),
-    improved_floor = as.numeric(hv213 > 20),
+    earth_floor = as.numeric(floor_material < 21),
+    improved_floor = as.numeric(floor_material > 20),
     # roof materials
-    simple_roof = as.numeric(hv215 < 31),
-    metal_roof = as.numeric(hv215 == 31),
-    nice_roof = as.numeric(hv215 > 31)
+    simple_roof = as.numeric(roof_material < 31),
+    metal_roof = as.numeric(roof_material == 31),
+    nice_roof = as.numeric(roof_material > 31)
   ) %>%
-  select(hv206:hv212,hv221:nice_roof)
+  select(electricity:car,telephone:nice_roof)
 
 nrow(na.omit(assets)) / nrow(assets)
 # Only 24.6% contain no missing values; we'll need to do some imputation here
@@ -81,8 +92,8 @@ nrow(na.omit(assets)) / nrow(assets)
 library(mice)
 assets_imp <- mice(assets)
 
-form <-  select(assets,-hv243a) %>% names() %>% 
-  paste(collapse=' + ') %>% paste('hv243a ~ ',.,collapse='')
+form <-  select(assets,-mobile) %>% names() %>% 
+  paste(collapse=' + ') %>% paste('mobile ~ ',.,collapse='')
 
 fit_assets <- with(data=assets_imp,exp=glm(as.formula(form),family=binomial(link='logit')))
 summary(fit_assets)
@@ -94,11 +105,10 @@ summary(fit_assets)
 # Mobile phone ownership is 61.1%
 
 # For each asset, what is the wealth index level at which people are
-# more likely to own one than not to? Do these rankings change between
-# 2010 and 2014?
+# more likely to own one than not to? 
 
-assets$wealth <- hh_all$hv271
-ggplot(assets,aes(wealth,hv243a)) +
+assets$wealth <- hh_clean$wealth_score
+ggplot(assets,aes(wealth,mobile)) +
   geom_jitter(size=4,color='tomato',alpha=0.1,width=0,height=0.4) +
   geom_smooth(method = "glm", method.args = list(family = "binomial")) +
   theme_classic() +
@@ -106,10 +116,6 @@ ggplot(assets,aes(wealth,hv243a)) +
 
 # Be more systematic
 good_assets <- ldply(names(select(assets,-wealth)),function(n) {
-  label <- n
-  if (n %in% hh_labels$var) {
-    label <- hh_labels[hh_labels$var==n,'varDescrip']
-  }
   f <- paste(n,' ~ wealth',collapse='') %>% as.formula()
   s <- glm(f,family=binomial(link='logit'),data=assets) %>% summary()
   w50 <- -s$coefficients[1,1]/s$coefficients[2,1]
@@ -120,7 +126,7 @@ good_assets <- ldply(names(select(assets,-wealth)),function(n) {
   data.frame(label=label,n=n,in_range=in_range,pos=pos,w50=w50)
 }) %>%
   filter(in_range & pos) %>%
-  select(label,n,w50) %>%
+  select(n,w50) %>%
   mutate(x=0,w50=w50/1e5) %>%
   arrange(w50)
 good_assets
@@ -129,7 +135,7 @@ good_assets
 # they invest in is a corrugated metal roof, and the next is a mobile phone.
 
 y_nudges <- c(0,0,0,0,0,0,-0.04,0.04,0,-0.05,0.05,0.02)
-ggplot(good_assets,aes(x=x,y=w50,label=label)) +
+ggplot(good_assets,aes(x=x,y=w50,label=n)) +
   geom_point(size=5,color='gray59') +
   geom_text(hjust=1,nudge_x=-0.03,nudge_y=y_nudges) +
   scale_x_continuous(limits=c(-0.3,1)) +
@@ -198,6 +204,8 @@ assets2010 <- hh2010 %>%
 
 # Compare adoption rates for 2010 and 2014
 # TODO: I'm not sure exactly how to adjust these for sampling weights
+# TODO: This isn't going to work until the 2010 variables have
+#       the same names as the 2014-5 variables.
 
 adoption_plot <- function(q) {
   plotme <- good_assets %>% select(label,n) %>%

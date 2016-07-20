@@ -50,28 +50,50 @@ multi_var_bars <- function(df,vars) {
 ###############################################################################
 # Admin-2 choropleth maps
 ###############################################################################
-adm2_map <- function(df,x,low_color='ivory',high_color='olivedrab') {
+make_adm2_avg <- function(df,x) {
   tmp <- df[,c('cluster_num',x)]
   names(tmp)[2] <- 'val'
-  adm2_avg <- tmp %>% 
+  tmp %>% 
     join(geo_clean,by='cluster_num') %>%
     group_by(district) %>%
-    summarise(val=mean(val,na.rm=TRUE)) %>%
-    mutate(NAME_2=as.character(district)) 
-  plotme <- join(rwanda.adm2,adm2_avg,by='NAME_2')
+    dplyr::summarise(val=mean(val,na.rm=TRUE)) %>%
+    mutate(NAME_2=as.character(district))   
+}
+
+make_map <- function(avg_df,low_color,high_color,title='') {
+  plotme <- join(rwanda.adm2,avg_df,by='NAME_2')
   ggplot(plotme) +
     aes(long,lat,group=group,fill=val) +
     geom_polygon() +
     geom_path(color='gray45') +
     coord_equal() +
     scale_fill_continuous(low=low_color,high=high_color) +
-    ggtitle(attr(df[,x],'label')) +
+    ggtitle(title) +
     theme(axis.title = element_blank(), 
           axis.text = element_blank(), axis.ticks = element_blank(), 
           axis.ticks.length = unit(0, units = "points"), panel.border = element_blank(), 
           panel.grid = element_blank(), panel.background = element_blank(), 
           plot.background = element_blank())
 }
+
+adm2_map <- function(df,x,low_color='ivory',high_color='olivedrab') {
+  adm2_avg <- make_adm2_avg(df,x)
+  make_map(adm2_avg,low_color,high_color)
+}
+
+###############################################################################
+# Map showing the gap in one particular indicator between two data frames
+###############################################################################
+gap_map <- function(df1,df2,x,low_color='ivory',high_color='indianred4',
+                    title='') {
+  avg1 <- make_adm2_avg(df1,x) %>% dplyr::rename(val1=val)
+  avg2 <- make_adm2_avg(df2,x) %>% dplyr::rename(val2=val)
+  j <- join(avg1,avg2,by='NAME_2') %>%
+    mutate(val=val1-val2) %>% 
+    select(NAME_2,val)
+  make_map(j,low_color,high_color,title)
+}
+  
 
 # TODO: Need a good way of mapping categorical variables, either with small
 # multiples or majority coloring.
