@@ -25,7 +25,7 @@
 #'
 
 # Import/Load packages ----------------------------------------------------
-pkgs = c('dplyr', 'haven', 'tidyr', 'ggplot2', 'readxl', 'foreign', 
+pkgs = c('plyr','dplyr', 'haven', 'tidyr', 'ggplot2', 'readxl', 'foreign', 
          'data.table', 'stringr','WDI','mice','maptools','rgeos','rgdal')
 
 # Check if packages are installed
