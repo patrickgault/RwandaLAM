@@ -155,7 +155,8 @@ ggplot(good_assets,aes(x=x,y=w50,label=n)) +
 plotme <- assets %>% transmute(wealth=wealth/1e5)
 ggplot(plotme,aes(x=wealth)) +
   geom_density(fill='goldenrod',color=NA,alpha=0.5) +
-  geom_point(data=good_assets,aes(x=w50,y=0.1),size=5,color='gray59') +
+  geom_point(data=good_assets,aes(x=w50,y=0.1),size=5,color='gray59',
+             alpha=0.5,color='gray59') +
   geom_text(data=good_assets,aes(x=w50,y=0.1,label=n),
             hjust=0,nudge_y=0.03,nudge_x=2*y_nudges) +
   coord_flip() +
