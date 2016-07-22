@@ -132,15 +132,13 @@ kids_clean$weight_height_zscore <-kids_clean$weight_height_zscore/100
 kids_diet <- select(kids_clean,contains("diet"), -diet_other_food)
 
 # Answers are 0=no, 1=yes, 8=don't know.  Recode 8 to NA.
-kids_diet_test<-na_if(kids_diet,8)
-
-##NEED TO FIGURE OUT IF THIS IS WORKING
+kids_diet<-na_if(kids_diet,8)
 
 ## Checking if there are rows with NAs in some but not all entries
-#table(rowSums(is.na(kids_diet)))
+table(rowSums(is.na(kids_diet)))
 #Output:
 #   0    1    3   13 
-#4535   47    1 3273 
+#4534   48    1 3273 
 
 ##Indeces of the rows that are all NAs
 #rows_allNAs <- rowSums(is.na(kids_diet)) == 13
@@ -156,16 +154,20 @@ kids_diet_test<-na_if(kids_diet,8)
 ##                     7. Eggs (WDDS_eggs)
 ##                     8. Legumes, nuts, and seeds (WDDS_legumes)  
 ##                     9. Milk and milk products (WDDS_dairy)
+
+## Next action: Clean this up!
+# Put data frames back in, not sure how to make rowwise command work.
+
 kids_diet =  kids_diet %>% 
   mutate(WDDS_starch=sum(diet_tubers,diet_cereals, na.rm=TRUE),
          WDDS_veg_green=diet_veg_dark_green,
-         WDDS_vitA=sum(diet_veg_yellow_orange, diet_fruit_vit_a, na.rm = TRUE),
+         WDDS_vitA=(sum(diet_veg_yellow_orange, diet_fruit_vit_a, na.rm=TRUE)>0)*1,
          WDDS_veg_other=diet_fruit_other,
          WDDS_organ=diet_meat_organ,
-         WDDS_meat_fish=sum(diet_meat,diet_fish, na.rm=TRUE),
+         WDDS_meat_fish=(sum(diet_meat,diet_fish, na.rm=TRUE)>0)*1,
          WDDS_eggs=diet_eggs,
          WDDS_legumes=diet_legumes_nuts,
-         WDDS_dairy=sum(diet_milk,diet_milk_products, na.rm=TRUE))
+         WDDS_dairy=(sum(diet_milk,diet_milk_products, na.rm=TRUE)>0)*1)
 
 ##Checking how many
 table(rowSums(is.na(select(kids_diet,contains("WDDS")))))
