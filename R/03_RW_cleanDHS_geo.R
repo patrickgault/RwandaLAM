@@ -3,11 +3,6 @@
 # 10 June 2016
 # (c) 2016 via MIT License
 
-library(rgeos)
-library(rgdal)
-library(maptools)
-
-
 # select relevant variables -----------------------------------------------
 
 geo_clean = geo %>% 
@@ -32,5 +27,5 @@ geo_clean = geo %>%
 rwanda <- readOGR(dsn='GIS/GADM_adm2',layer='RWA_adm2')
 rwanda@data$id = rwanda@data$ID_2
 rwanda.points <- fortify(rwanda,region='ID_2')
-rwanda.adm2 <- join(rwanda.points,rwanda@data,by='id')
+rwanda.adm2 <- plyr::join(rwanda.points,rwanda@data,by='id')
 rm(rwanda,rwanda.points)
