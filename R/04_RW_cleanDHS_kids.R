@@ -109,6 +109,22 @@ kids_clean$weight_height_zscore <-na_if(kids_clean$weight_height_zscore,9998)
 kids_clean$weight_height_zscore <-kids_clean$weight_height_zscore/100
 #qplot(kids_clean$weight_height_zscore) # looks like gaussian, centered around 0
 
+## Mother's Stunting ##
+
+## Height for Age percentile
+#Replace all 9998 values with NA, total NAs:3981, total data=3875
+kids_clean$mother_height_age_percentile <-na_if(kids_clean$mother_height_age_percentile,9998)
+#The percentile needs to be divided by 100
+kids_clean$mother_height_age_percentile <-kids_clean$mother_height_age_percentile/100
+#qplot(kids_clean$mother_height_age_percentile) 
+
+## Height for Age zscore, measured in std devs above/below mean
+## Replace all 9998 values with NA, total NAs:4332, total data=3875 
+kids_clean$mother_height_age_zscore <-na_if(kids_clean$mother_height_age_zscore,9998)
+## The zscore needs to be divided by 100
+kids_clean$mother_height_age_zscore <-kids_clean$mother_height_age_zscore/100
+#qplot(kids_clean$mother_height_age_zscore) 
+
 ## Mother's Education ##
 
 # Highest educational level with 0=none, 1=primary, 2=secondary, 3=higher
@@ -158,32 +174,31 @@ table(rowSums(is.na(kids_diet)))
 ## Next action: Clean this up!
 # Put data frames back in, not sure how to make rowwise command work.
 
+# Note: using rowMeans instead of rowSums due to weird behavior of rowSums wrt na.rm=TRUE (ie NA+NA+NA=0)
 kids_diet =  kids_diet %>% 
-  mutate(WDDS_starch=sum(diet_tubers,diet_cereals, na.rm=TRUE),
+  mutate(WDDS_starch=(rowMeans(data.frame(kids_diet$diet_tubers,kids_diet$diet_cereals), na.rm=TRUE)>0)*1,
          WDDS_veg_green=diet_veg_dark_green,
-         WDDS_vitA=(sum(diet_veg_yellow_orange, diet_fruit_vit_a, na.rm=TRUE)>0)*1,
+         WDDS_vitA=(rowMeans(data.frame(kids_diet$diet_veg_yellow_orange,kids_diet$diet_fruit_vit_a), na.rm=TRUE)>0)*1,
          WDDS_veg_other=diet_fruit_other,
          WDDS_organ=diet_meat_organ,
-         WDDS_meat_fish=(sum(diet_meat,diet_fish, na.rm=TRUE)>0)*1,
+         WDDS_meat_fish=(rowMeans(data.frame(kids_diet$diet_meat,kids_diet$diet_fish), na.rm=TRUE)>0)*1,
          WDDS_eggs=diet_eggs,
          WDDS_legumes=diet_legumes_nuts,
-         WDDS_dairy=(sum(diet_milk,diet_milk_products, na.rm=TRUE)>0)*1)
+         WDDS_dairy=(rowMeans(data.frame(kids_diet$diet_milk,kids_diet$diet_milk_products), na.rm=TRUE)>0)*1)
 
-##Checking how many
+##Checking how many NAs there are per row
 table(rowSums(is.na(select(kids_diet,contains("WDDS")))))
 #Output:
-#   0    1    2    5 
+#   0    1    2    9 
 #4565   17    1 3273 
 
-kids_diet =  kids_diet %>% 
-  mutate(WDDS_DietDiv=sum(WDDS_starch,WDDS_veg_green,WDDS_vitA,WDDS_veg_other,WDDS_organ,
-                           WDDS_meat_fish,WDDS_eggs,WDDS_legumes,WDDS_dairy))
+kids_diet$WDDS_total<-rowSums(select(kids_diet,contains("WDDS")))
 
-#DietDiv (3273 NAs, 7856 total)
-#   0    1    2    3    4    5    6    7    8 
-#1446  317  614  885  679  401  182   44   15 
+#table(kids_diet, exclude=NULL)
+#   0    1    2    3    4    5    6    7    8 <NA> 
+#1446  317  607  883  676  398  179   44   15 3291 
 
-kids_clean$DietDiv_WDDS <- DietDiv
+kids_clean<-data.frame(kids_clean,select(kids_diet,contains("WDDS")))
 
 ##Variable summary:
 ## interview_date_cmc: units=cmc
@@ -197,9 +212,12 @@ kids_clean$DietDiv_WDDS <- DietDiv
 ## weight_age_zscore: continuous, min=-4.8 max=4.8
 ## weight_height_percentile: continuous, min=0, max=100 
 ## weight_height_zscore: continuous, min=-4.0 max=5.8
+## mother_height_age_percentile: continuous, min=, max= 
+## mother_height_age_zscore: continuous, min=, max=
 ## mother_ed_level: highest level of mother's education, 0=none, 1=primary, 
 ## 2=secondary, 3=higher
 ## mother_ed_year: highest year of education, 0-8, note: more NAs than level
+## diet_xx: whether or not child was given ...
 
 
 
