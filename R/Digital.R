@@ -475,11 +475,19 @@ dhs_mobile <- llamar::loadDHS(breakdown='national',indicators='HC_HEFF_H_MPH',
   rename(val=Value,year=SurveyYear) %>%
   mutate(source='DHS')
 
-mobile <- rbind(mobile,dhs_mobile)
+source('R/GSMA.R') # creates 'gsma' dataframe
+gsma_tmp <- gsma %>%
+  mutate(year=qnum,val=rate*100,source='GSMA') %>%
+  select(val,year,source)
+
+mobile <- rbind(mobile,dhs_mobile) %>% 
+  rbind(gsma_tmp) %>%
+  mutate(ptsize=ifelse(source != 'GSMA',4,1))
 ggplot(mobile,aes(x=year,y=val,group=source,color=source)) +
-  geom_point(size=4) +
+  geom_point(aes(size=ptsize)) +
   geom_line(size=2,alpha=0.6) +
   theme_classic() +
+  scale_size_continuous(guide=FALSE) +
   ylab('Mobile ownership (%)')
 
 # These roughly agree, despite the fact that they aren't measuring exactly the
@@ -488,7 +496,17 @@ ggplot(mobile,aes(x=year,y=val,group=source,color=source)) +
 # mobile phones. The slowdown in DHS growth could be a sign of saturation at 
 # the household level, while subscriptions continue to grow.
 
-# TODO: Add in GSMA data as well and see if it agrees
+# GSMA is the most conservative, since they're just counting unique 
+# subscriptions. So the percentage there is not the percentage of households
+# with unique subscriptions, it's the percentage of individual Rwandans.
+
+# The fact that so far the household-level DHS numbers have been higher than
+# the individual-level GSMA numbers means that not too many households have
+# multiple mobiles. If those lines cross (as it looks like they might before
+# 2020), it would suggest that a larger fraction of individuals have phones
+# than do households -- some households would need to have multiple phones
+# for this to be the case. (It might be possible to do something more rigorous
+# with this based on the distribution of hh sizes...)
 
 ##### Landline ownership ------------------------------------------------------
 phone <- WDI(country='RW',indicator='IT.MLT.MAIN.P2',start=1960,end=2015) %>% 
