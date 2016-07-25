@@ -94,6 +94,7 @@ kids_clean$height_age_zscore <- (kids_clean$height_age_zscore / 100)
 
 # Check z-score versus age
 library(ggthemes) 
+library(viridis)
 # No noticable difference between boys and girls stunting, does peak around 20 months
 kids_clean %>% mutate(stunted = ifelse(height_age_zscore <= -2, 1, 0)) %>%
   ggplot(aes(x = age_calc_months, y = stunted, colour = factor(sex))) +
@@ -184,7 +185,7 @@ kids_diet =  kids_diet %>%
 #   0    1    2    3    4    5    6    7    8 
 #1446  317  614  885  679  401  182   44   15 
 
-kids_clean$DietDiv_WDDS <- DietDiv
+kids_clean$DietDiv_WDDS <- kids_diet$WDDS_DietDiv
 
 
 
