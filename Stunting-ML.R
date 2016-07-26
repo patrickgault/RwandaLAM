@@ -1,0 +1,177 @@
+# Treat stunting as a binary variable and try out various ML
+# models (and feature sets) using caret to see how well it 
+# can be predicted.
+
+source('R/01_RW_cleanDHS.R') # load and clean hh data
+source('R/04_RW_cleanDHS_kids.R') # load Nada's work so far
+# most importantly, this creates the data frames kids_clean 
+# and kids_diet
+
+my_kids <- kids_clean %>% 
+  mutate(stunted = height_age_zscore < -2,
+         stunted = as.factor(ifelse(stunted,'T','F')))
+
+# First, use logistic regression to see what looks important
+kids_reg <- my_kids %>%
+  dplyr::select(sex,mother_ed_level,mother_ed_year,
+         child_milk:child_other_food,birth_interval_preceding,birth_order,
+         age_calc_months,wealth_index,stunted)
+glm(stunted~.,family=binomial(link='logit'),data=kids_reg) %>% summary()
+# sex, child_milk, child_tubers, child_veg_dark_green, child_fruit_other,
+# child_meat_organ, child_legumes_nuts, age_calc_months, wealth_index
+
+library(caret)
+
+# simplest feature set -- only wealth quintile matters
+feat1 <- my_kids %>% 
+  dplyr::select(wealth_index,stunted) %>% 
+  na.omit()
+
+# first off, how well do we do if we assume no one is stunted?
+sum(feat1$stunted=='F')/sum(!is.na(feat1$stunted))
+# 68.25% accuracy!
+
+train(stunted ~ .,
+      data = feat1,
+      trControl = trainControl(method='cv',number=10),
+      method = "nb")
+# That was useless
+
+feat2 <- my_kids %>% 
+  dplyr::select(sex, child_milk, child_tubers, child_veg_dark_green, 
+                child_fruit_other, child_meat_organ, child_legumes_nuts, 
+                age_calc_months, wealth_index, stunted) %>%
+  na.omit()
+sum(feat2$stunted=='F')/sum(!is.na(feat2$stunted)) # 69.1% null accuracy
+train(stunted ~ .,
+      data = feat2,
+      trControl = trainControl(method='cv',number=10),
+      tuneLength=15,
+      method = "nb") 
+# 69% without tuning. Maybe NB just isn't up to this?
+train(stunted ~ .,
+      data = feat2,
+      trControl = trainControl(method='cv',number=10),
+      method = "svmRadial") 
+# pushes us up to 70% accuracy. Still pretty lame
+train(stunted ~ .,
+      data = feat2,
+      trControl = trainControl(method='cv',number=10),
+      method = "knn",
+      tuneLength=20)
+# still only a tiny improvement
+
+# Let's use some geographic information
+tmp <- my_kids[,c('cluster_num','stunted')] %>% 
+  na.omit() %>%
+  mutate(val=as.numeric(stunted=='T')) %>% 
+  plyr::join(geo_clean,by='cluster_num') %>%
+  group_by(district) %>%
+  dplyr::summarise(yes=sum(val==1),no=sum(val==0)) 
+
+fisher_pval <- function(i) {
+  ft <- rbind(tmp[i,c('yes','no')],
+        tmp[-i,c('yes','no')] %>% colSums()) %>%
+    as.matrix() %>%
+    fisher.test(alternative='greater')
+  ft$p.value
+}
+
+tmp <- tmp %>%
+  mutate(mean=yes/(yes+no),
+         pval=sapply(1:nrow(tmp),fisher_pval),
+         sig=as.numeric(pval < 0.1/nrow(tmp)))
+source('R/simple_plots.R')
+# average stunting rates all over
+my_kids %>% 
+  mutate(val=as.numeric(stunted=='T')) %>%
+  adm2_map('val')
+# just pick out the really high ones
+tmp %>% 
+  mutate(val=sig,NAME_2=as.character(district)) %>% 
+  make_map(low_color='ivory',high_color='firebrick1')
+tmp %>% filter(sig==TRUE)
+
+# create a new feature corresponding to these four districts
+j <- join(kids_clean,geo_clean,by='cluster_num') %>%
+  join(tmp,by='district') 
+my_kids$stunt_geo <- j$sig  
+
+feat3 <- my_kids %>% 
+  dplyr::select(sex, child_milk, child_tubers, child_veg_dark_green, 
+                child_fruit_other, child_meat_organ, child_legumes_nuts, 
+                age_calc_months, wealth_index, stunt_geo,
+                stunted) %>%
+  na.omit()
+
+train(stunted ~ .,
+      data = feat3,
+      trControl = trainControl(method='cv',number=10),
+      method = "svmRadial") 
+# this is an improvement over feat2, but only a small one
+
+# add in some household-level variables and see if these help
+
+kids_add_hh <- kids_clean %>%
+  dplyr::select(-wealth_index) %>%
+  join(hh_clean,by=c('cluster_num','hh_num')) %>%
+  dplyr::select(num_hh,num_under5,urban,water_source,toilet_type,
+                electricity,age_head,share_toilet,
+                water_treat:water_treat_settle,has_soap,toilet_clean_dry,
+                toilet_clean_urine,toilet_clean_flies,wealth_score,kitchen,
+                ag_land,livestock) %>%
+  # add binary variables for most prominent
+  mutate(water_prot_spring = as.numeric(water_source==41),
+         water_standpipe = as.numeric(water_source==13),
+         water_spring = as.numeric(water_source==42),
+         water_open = as.numeric(water_source==43),
+         water_piped = as.numeric(water_source==12),
+         water_indoor = as.numeric(water_source==11),
+         toilet_pit_slab = as.numeric(toilet_type==22),
+         toilet_pit_open = as.numeric(toilet_type==23),
+         toilet_vip = as.numeric(toilet_type==21),
+         toilet_bush = as.numeric(toilet_type==31),
+         toilet_flush = as.numeric(toilet_type < 16)) %>%
+  dplyr::select(-water_source,-toilet_type)
+         
+         
+# TODO: may want to add livestock & ag assets
+feat3 <- cbind(my_kids,kids_add_hh) %>%
+  dplyr::select(stunted, sex, child_milk, child_tubers, child_veg_dark_green, 
+         child_fruit_other, child_meat_organ, child_legumes_nuts, 
+         age_calc_months, wealth_index, stunt_geo,num_hh,num_under5,urban,
+         electricity,age_head,share_toilet,
+         water_treat:water_treat_settle,has_soap,toilet_clean_dry,
+         toilet_clean_urine,toilet_clean_flies,wealth_score,kitchen,
+         ag_land,livestock,water_prot_spring:toilet_flush) 
+
+nrow(na.omit(feat3)) / nrow(feat3) # looks like we'll need imputation
+imp3 <- mice(feat3) # might be better to leave stunting out
+form3 <-  dplyr::select(feat3,-stunted) %>% names() %>% 
+  paste(collapse=' + ') %>% paste('stunted ~ ',.,collapse='')
+fit3 <- with(data=imp3,exp=glm(as.formula(form3),family=binomial(link='logit')))
+summary(fit3) # this actually doesn't summarize very well...
+
+# When we add in more data, some things (like milk consumption) look significant
+# that didn't before. This could also be a result of imputation.
+# Geography seems to matter a lot. Treatment of water with
+# filters seems to hurt. Some of the correlations have directionality
+# that seems counterintuitive, but that can easily happen in a big multiple 
+# regression. 
+
+# What if we just throw everything (from one imputation) in a naive Bayes?
+# (might be more robust to toss them all in)
+feat3_1 <- complete(imp3,1)
+train(stunted ~ .,
+      data = feat3_1,
+      trControl = trainControl(method='cv',number=10),
+      tuneLength=15,
+      method = "nb") 
+# accuracy = 68.9% -- no real improvement
+
+# I think I need to spend some more time exploring and visualizing
+# this data to get a better idea of what's important before throwing
+# everything in a ML model.
+
+
+
