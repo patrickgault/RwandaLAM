@@ -164,28 +164,33 @@ summary(kids_diet)
 ##                     7. Eggs (WDDS_eggs)
 ##                     8. Legumes, nuts, and seeds (WDDS_legumes)  
 ##                     9. Milk and milk products (WDDS_dairy)
-kids_diet =  kids_diet %>% 
-  mutate(WDDS_starch=sum(child_tubers,child_cereals, na.rm=TRUE),
-         WDDS_veg_green=child_veg_dark_green,
-         WDDS_vitA=sum(child_veg_yellow_orange, child_fruit_vit_a, na.rm = TRUE),
-         WDDS_veg_other=child_fruit_other,
-         WDDS_organ=child_meat_organ,
-         WDDS_meat_fish=sum(child_meat,child_fish, na.rm=TRUE),
-         WDDS_eggs=child_eggs,
-         WDDS_legumes=child_legumes_nuts,
-         WDDS_dairy=sum(child_milk,child_milk_products, na.rm=TRUE))
+
+na0 <- function(x) {
+  ifelse(!is.na(x),x,0)
+}
 
 kids_diet =  kids_diet %>% 
-  mutate(WDDS_DietDiv=sum(WDDS_starch,WDDS_veg_green,WDDS_vitA,WDDS_veg_other,WDDS_organ,
-                           WDDS_meat_fish,WDDS_eggs,WDDS_legumes,WDDS_dairy))
+  mutate(WDDS_starch=na0(child_tubers) + na0(child_cereals),
+         WDDS_veg_green=na0(child_veg_dark_green),
+         WDDS_vitA=na0(child_veg_yellow_orange)+na0(child_fruit_vit_a),
+         WDDS_veg_other=na0(child_fruit_other),
+         WDDS_organ=na0(child_meat_organ),
+         WDDS_meat_fish=na0(child_meat)+na0(child_fish),
+         WDDS_eggs=na0(child_eggs),
+         WDDS_legumes=na0(child_legumes_nuts),
+         WDDS_dairy=na0(child_milk)+na0(child_milk_products))
 
-
-
-#DietDiv (3273 NAs, 7856 total)
-#   0    1    2    3    4    5    6    7    8 
-#1446  317  614  885  679  401  182   44   15 
+kids_diet$WDDS_DietDiv <- kids_diet %>% 
+  select(WDDS_starch:WDDS_dairy) %>% 
+  rowSums()
 
 kids_clean$DietDiv_WDDS <- kids_diet$WDDS_DietDiv
+
+
+
+
+
+
 
 
 
