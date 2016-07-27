@@ -28,6 +28,21 @@ summary(fit)
 fit <- lm(height_age_zscore~WDDS_starch+WDDS_veg_green+WDDS_vitA+WDDS_veg_other+WDDS_organ+WDDS_meat_fish+WDDS_eggs+WDDS_legumes+WDDS_dairy+birth_interval_preceding+mother_ed_level+sex+age_calc_months+birth_order+wealth_index+interview_date_cmc+mother_height_age_zscore+as.factor(water_source)+as.factor(toilet_type),data=kids_analysis) 
 summary(fit)
 
+hist(kids_analysis$height_age_zscore[kids_analysis$WDDS_starch==0], col=rgb(0,0,1,1/4),xlim=c(-6,6),ylim=c(0,400))  # first histogram
+hist(kids_analysis$height_age_zscore[kids_analysis$WDDS_starch==1], col=rgb(1,0,0,1/4), add=T)  # second
+
+hist(kids_analysis$height_age_zscore[kids_analysis$diet_cereals==0], col=rgb(0,0,1,1/4),xlim=c(-6,6),ylim=c(0,500))  # first histogram
+hist(kids_analysis$height_age_zscore[kids_analysis$diet_cereals==1], col=rgb(1,0,0,1/4),xlim=c(-6,6),ylim=c(0,500), add=T)  # second
+
+fit <- lm(weight_age_percentile~WDDS_total_good+WDDS_starch+WDDS_legumes+birth_interval_preceding+mother_ed_level+sex+age_calc_months+birth_order+wealth_index+interview_date_cmc+mother_height_age_zscore,data=kids_analysis) 
+summary(fit)
+
+kids_analysis$WDDS_total_good<-kids_analysis$WDDS_total-kids_analysis$WDDS_starch-kids_analysis$WDDS_legumes
+
+fit <- lm((WDDS_total_good)~WDDS_starch+WDDS_legumes,data=kids_analysis) 
+summary(fit)
+
+
 source('R/simple_plots.R')
 
 
