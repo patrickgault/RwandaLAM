@@ -58,3 +58,5 @@ Datain/RW_2014-15_DHS/rwge71fl/RWGE71FL.shp.xml
 # other problematic stuff
 R/00_RW_loadDHS.R
 R/02_RW_cleanDHS_hh.R
+
+*.sav
