@@ -26,6 +26,12 @@ data_rename_vars <- as.character(hh_labels_tokeep$renamedVar[hh_labels_tokeep$Ke
 hh_clean <- hh_all[data_subset_vars]
 names(hh_clean) <- data_rename_vars
 
+## Creates functions that will be useful for pulling attributes/variable codes later
+source('R/VarCodeDescrip_Functions.R')
+
+## Creates smaller data frame of labels to make it easier to query relevant info
+hh_clean_labels<-make_cleanLabelMat(hh_labels,data_subset_vars,data_rename_vars)
+
 ## Creates household id variable for merging with hh data set, note
 ## this is not the same as hhid due to weirdness in spacing of DHS
 ## paste job.  It can only be merged with a homemade household id ## like this one.

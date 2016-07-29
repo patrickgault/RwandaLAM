@@ -21,22 +21,11 @@ data_rename_vars <- as.character(kids_labels_tokeep$renamedVar[kids_labels_tokee
 kids_clean <- kids_all[data_subset_vars]
 names(kids_clean) <- data_rename_vars
 
-## Creates smaller labels matrix with only the relevant info
-kids_clean_labels_temp<-kids_labels[kids_labels$var %in% data_subset_vars,]
-data_subset<-data.frame(var=data_subset_vars,renamedVar=data_rename_vars)
-kids_clean_labels<-join(kids_clean_labels_temp,data_subset,by="var",type="inner")
+## Creates functions that will be useful for pulling attributes/variable codes later
+source('R/VarCodeDescrip_Functions.R')
 
-## Function for easily pulling recode info for a given variable
-pull_varCodes <- function(varName,mat_labels=kids_clean_labels){
-  varCodes<-mat_labels$varValues[mat_labels$renamedVar==varName]
-  return(varCodes)
-}
-
-## Function for easily pulling descrption for a given variable
-pull_varDescrip <- function(varName,mat_labels=kids_clean_labels){
-  varCodes<-mat_labels$varDescrip[mat_labels$renamedVar==varName]
-  return(varCodes)
-}
+## Creates smaller data frame of labels to make it easier to query relevant info
+kids_clean_labels<-make_cleanLabelMat(kids_labels,data_subset_vars,data_rename_vars)
 
 ## Creates household id variable for merging with hh data set, note
 ## this is not the same as hhid due to weirdness in spacing of DHS

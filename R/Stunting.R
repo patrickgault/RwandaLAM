@@ -1,6 +1,5 @@
-#source('R/00_RW_loadDHS.R')
+source('R/00_RW_loadDHS.R')
 source('R/02_RW_cleanDHS_hh.R')
-hh_clean$cluster_hh_num<-paste(hh_clean$cluster_num,hh_clean$hh_num)
 source('R/04_RW_cleanDHS_kids.R')
 
 #Adding relevant variables from hh_clean
