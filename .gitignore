@@ -60,4 +60,4 @@ R/00_RW_loadDHS.R
 R/02_RW_cleanDHS_hh.R
 
 # data in directory
-Datain/EICV_data
+Datain/EICV_data/
