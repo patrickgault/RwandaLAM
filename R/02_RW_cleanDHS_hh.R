@@ -3,8 +3,6 @@
 # 10 June 2016
 # (c) 2016 via MIT License
 
-library(ggplot2)
-
 # basic info --------------------------------------------------------------
 
 # TODO: Add some data quality checks for hh_vars_tokeep.xlsx
@@ -14,19 +12,31 @@ library(ggplot2)
 
 ## Reads in excel spreadsheet that states which variables to keep
 ## from kids data set
-hh_labels_tokeep<-read_excel('Excel/hh_vars_tokeep.xlsx')
+hh_labels_tokeep<-read.csv('Excel/hh_vars_tokeep.csv')
 
 ## Relabels "NA" values (ie variables that have not been decided on yet) as 0
 ## so that they are not selected. From the Excel spreadsheet pulls the list 
 ## of variables to keep and what they should be renamed.
 hh_labels_tokeep$Keep[is.na(hh_labels_tokeep$Keep)] <- 0
-data_subset_vars <- hh_labels_tokeep$var[hh_labels_tokeep$Keep==1] 
-data_rename_vars <- hh_labels_tokeep$renamedVar[hh_labels_tokeep$Keep==1] 
+data_subset_vars <- as.character(hh_labels_tokeep$var[hh_labels_tokeep$Keep==1]) 
+data_rename_vars <- as.character(hh_labels_tokeep$renamedVar[hh_labels_tokeep$Keep==1]) 
 
 ## Creates new clean data frame that is a subset of the overall data frame, 
 ## and renames the variables.
 hh_clean <- hh_all[data_subset_vars]
 names(hh_clean) <- data_rename_vars
+
+## Creates functions that will be useful for pulling attributes/variable codes later
+source('R/VarCodeDescrip_Functions.R')
+
+## Creates smaller data frame of labels to make it easier to query relevant info
+hh_clean_labels<-make_cleanLabelMat(hh_labels,data_subset_vars,data_rename_vars)
+
+## Creates household id variable for merging with hh data set, note
+## this is not the same as hhid due to weirdness in spacing of DHS
+## paste job.  It can only be merged with a homemade household id ## like this one.
+hh_clean$cluster_hh_num <- paste(hh_clean$cluster_num, hh_clean$hh_num)
+
 
   hh_clean <- mutate(hh_clean, 
     # -- Convert sampling rates to appropriate value --
@@ -57,6 +67,7 @@ summary(hh_clean  %>% select(matches("water|_wash")))
     water_treat_settle = binary10(water_treat_settle),
     container_wash = ifelse(container_wash < 8, container_wash,NA)
   )
+# TODO: We're not using labels anymore. Get rid of these.
 attr(hh_clean$water_treat,'label')        <- attr(hh$hv237,'label')
 attr(hh_clean$water_treat_boil,'label')   <- attr(hh$hv237a,'label')
 attr(hh_clean$water_treat_bleach,'label') <- attr(hh$hv237b,'label')
