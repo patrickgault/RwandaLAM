@@ -55,8 +55,22 @@ Datain/RW_2014-15_DHS/rwge71fl/RWGE71FL.shp.xml
 
 *.shx
 
+<<<<<<< HEAD
 # other problematic stuff
 R/00_RW_loadDHS.R
 R/02_RW_cleanDHS_hh.R
 
 *.sav
+=======
+
+>>>>>>> Dev
+
+Datain/RW_2014-15_DHS/._rwpr70dt
+
+Datain/RW_2014-15_DHS/._rwir70dt
+
+Datain/RW_2014-15_DHS/._rwkr70dt
+
+Datain/RW_2014-15_DHS/._rwmr70dt
+
+Datain/RW_2014-15_DHS/._rwbr70dt
