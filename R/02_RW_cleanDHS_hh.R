@@ -3,8 +3,6 @@
 # 10 June 2016
 # (c) 2016 via MIT License
 
-library(ggplot2)
-
 # basic info --------------------------------------------------------------
 
 # TODO: Add some data quality checks for hh_vars_tokeep.xlsx
@@ -57,6 +55,7 @@ summary(hh_clean  %>% select(matches("water|_wash")))
     water_treat_settle = binary10(water_treat_settle),
     container_wash = ifelse(container_wash < 8, container_wash,NA)
   )
+# TODO: We're not using labels anymore. Get rid of these.
 attr(hh_clean$water_treat,'label')        <- attr(hh$hv237,'label')
 attr(hh_clean$water_treat_boil,'label')   <- attr(hh$hv237a,'label')
 attr(hh_clean$water_treat_bleach,'label') <- attr(hh$hv237b,'label')
