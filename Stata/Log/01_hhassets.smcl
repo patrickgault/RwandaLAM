@@ -1,0 +1,45 @@
+{smcl}
+{com}{sf}{ul off}{txt}{.-}
+      name:  {res}<unnamed>
+       {txt}log:  {res}C:\Users\Tim\Documents\Github\RwandaLAM/Stata/Log/01_hhassets.smcl
+  {txt}log type:  {res}smcl
+ {txt}opened on:  {res} 5 Aug 2016, 14:16:26
+{txt}
+{com}. use "$pathhh/RWHR70FL.dta"
+{txt}
+{com}. 
+. * Replicating work done in 02_RW_cleanDHS_hh.r
+. /* Create a unique id for merging (not that compliciated! -- see: 
+>    http://dhsprogram.com/data/Merging-Datasets.cfm 
+>    Note: This id will not be unique b/c it is measured at the individual level
+>    for now. Need to collapse down to hh level to get mergability 
+>    726 that have conflicts due to concatenation   
+>    */
+. clonevar v001 = hv001
+{txt}
+{com}. clonevar v002 = hv002
+{txt}
+{com}. isid v001 v002
+{txt}
+{com}. 
+{txt}end of do-file
+
+{com}. do "C:\Users\Tim\AppData\Local\Temp\STD02000000.tmp"
+{txt}
+{com}. /*-------------------------------------------------------------------------------
+> # Name:         02_stunting
+> # Purpose:      Create district level statistics on stunting using sampling weights
+> # Author:       Tim Essam, Ph.D.
+> # Created:      2016/08/01
+> # Owner:        USAID GeoCenter | OakStream Systems, LLC
+> # License:      MIT License
+> # Ado(s):       see below
+> #-------------------------------------------------------------------------------
+> */
+. 
+. 
+. clear
+{txt}
+{com}. capture log close
+{smcl}
+{com}{sf}{ul off}

@@ -1,0 +1,70 @@
+{smcl}
+{com}{sf}{ul off}{txt}{.-}
+      name:  {res}<unnamed>
+       {txt}log:  {res}C:\Users\Tim\Documents\Github\RwandaLAM/Stata/Log/04_livelihoodzone.txt
+  {txt}log type:  {res}smcl
+ {txt}opened on:  {res} 9 Aug 2016, 14:37:06
+{txt}
+{com}. 
+. encode lznamee, gen(lvhood_zone)
+{txt}
+{com}. 
+. /* These DHS cluster offsets fall outside of livelihood zones or within
+>         National Park boundaries. We use the nearest livelihood zone (from FEWSNET)
+>         as the replacement value */
+.         
+. replace lvhood_zone = 9 if inlist(dhsclust, 418, 161, 296, 81, 171)
+{txt}(5 real changes made)
+
+{com}. replace lvhood_zone = 3 if inlist(dhsclust, 101, 317)
+{txt}(2 real changes made)
+
+{com}. replace lvhood_zone = 16 if inlist(dhsclust, 199, 347, 281)
+{txt}(3 real changes made)
+
+{com}. 
+. 
+. * Recode zones to match those from FEWS NET
+. * https://github.com/tessam30/RwandaLAM/blob/master/Datain/LivelihoodZones_FEWS.csv
+. #delimit ;
+{txt}delimiter now ;
+{com}. recode lvhood_zone (15 = 0 "Kigali city")
+>                                    (9 = 1 "Lake Kivu Coffee")
+>                                    (16 = 2 "Western Congo-Nile Crest Tea")
+>                                    (12 = 3 "Northwest Volcanic Irish Potato")
+>                                    (6 = 4 "Eastern Congo-Nile Highland Subsistence Farming")
+>                                    (3 = 5 "Central Plateau Cassava and Coffee")
+>                                    (11 = 6 "Northern Highland Beans and Wheat")
+>                                    (4 = 7 "Central-Northern Highland Irish Potato, Beans and Vegetables")
+>                                    (2 = 8 "Bugesera Cassava")
+>                                    (7 = 9 "Eastern Plateau Mixed Agricultural")
+>                                    (14 = 10 "Southeastern Plateau Banana")
+>                                    (5 = 11 "Eastern Agropastoral")
+>                                    (8 = 12 "Eastern Semi-Arid Agropastoral"),
+>                                    gen(lvdzone);
+{txt}(492 differences between lvhood_zone and lvdzone)
+
+{com}. #delimit cr
+{txt}delimiter now cr
+{com}. drop lvhood_zone                                   
+{txt}
+{com}. la var lvdzone "livelihood zones (from FEWSNET)"
+{txt}
+{com}. 
+. saveold "$pathout/RWA_DHS_Livelihoods.dta", replace
+{txt}(saving in Stata 13 format)
+{p 0 6 2}
+(FYI, {bf:saveold} has options
+{bf:version(12)} and {bf:version(11)} that
+write files in older Stata formats)
+{p_end}
+file C:\Users\Tim\Documents\Github\RwandaLAM/Dataout/RWA_DHS_Livelihoods.dta saved
+
+{com}. log close
+      {txt}name:  {res}<unnamed>
+       {txt}log:  {res}C:\Users\Tim\Documents\Github\RwandaLAM/Stata/Log/04_livelihoodzone.txt
+  {txt}log type:  {res}smcl
+ {txt}closed on:  {res} 9 Aug 2016, 14:37:06
+{txt}{.-}
+{smcl}
+{txt}{sf}{ul off}

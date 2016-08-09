@@ -1,0 +1,443 @@
+{smcl}
+{com}{sf}{ul off}{txt}{.-}
+      name:  {res}<unnamed>
+       {txt}log:  {res}C:\Users\Tim\Documents\Github\RwandaLAM\02_stunting.smcl
+  {txt}log type:  {res}smcl
+ {txt}opened on:  {res} 9 Aug 2016, 14:00:31
+{txt}
+{com}. 
+. * Flag children selected for anthropmetry measures
+. clonevar anthroTag = v042
+{txt}
+{com}. keep if anthroTag == 1
+{txt}(3,969 observations deleted)
+
+{com}. clonevar DHSCLUST = v001
+{txt}
+{com}. 
+. clonevar stunting = hw5
+{txt}(288 missing values generated)
+
+{com}. clonevar stunting2 = hw70
+{txt}(288 missing values generated)
+
+{com}. 
+. foreach x of varlist stunting stunting2 {c -(}
+{txt}  2{com}.         replace `x' = . if inlist(`x', 9998, 9996)
+{txt}  3{com}.         replace `x' = `x' / 100
+{txt}  4{com}.         {c )-}
+{txt}(75 real changes made, 75 to missing)
+variable {bf}stunting{sf} was {bf}{res}int{sf}{txt} now {bf}{res}float{sf}
+{txt}(3,518 real changes made)
+(61 real changes made, 61 to missing)
+variable {bf}stunting2{sf} was {bf}{res}int{sf}{txt} now {bf}{res}float{sf}
+{txt}(3,533 real changes made)
+
+{com}. *end
+. 
+. g byte stunted = (stunting < -2.0)
+{txt}
+{com}. replace stunted = . if stunting == .
+{txt}(363 real changes made, 363 to missing)
+
+{com}. 
+. g byte stunted2 = (stunting2 < -2.0)
+{txt}
+{com}. replace stunted2 = . if stunting2 == .
+{txt}(349 real changes made, 349 to missing)
+
+{com}. 
+. g byte extstunted = (stunting < -3.0)
+{txt}
+{com}. replace extstunted =. if stunting == .
+{txt}(363 real changes made, 363 to missing)
+
+{com}. 
+. g byte extstunted2 = (stunting2 < -3.0)
+{txt}
+{com}. replace extstunted2 = . if stunting2 == .
+{txt}(349 real changes made, 349 to missing)
+
+{com}. 
+. clonevar ageChild = hw1
+{txt}(272 missing values generated)
+
+{com}. clonevar age_group = v013
+{txt}
+{com}. 
+. egen ageMonGroup = cut(ageChild), at(0, 6, 9, 12, 18, 24, 36, 48, 60) label
+{txt}(272 missing values generated)
+
+{com}. 
+. recode b4 (1 = 0 "male")(2 = 1 "female"), gen(female)
+{txt}(3887 differences between b4 and female)
+
+{com}. 
+. * Stunting averages grouping
+. egen ageg_stunting = mean(stunting), by(age_group)
+{txt}
+{com}. egen age_stunting = mean(stunting), by(ageChild)
+{txt}(272 missing values generated)
+
+{com}. la var ageg_stunting "age group average for stunting"
+{txt}
+{com}. la var age_stunting "age chunk average for stunting"
+{txt}
+{com}. 
+. * religion
+. clonevar religion = v130
+{txt}(1 missing value generated)
+
+{com}. recode religion (4 5 7 96 = 4)
+{txt}(religion: 47 changes made)
+
+{com}. lab def rel 1 "catholic" 2 "protestant" 3 "adventist" 4 "other"
+{txt}
+{com}. la values religion rel
+{txt}
+{com}. 
+. * health outcomes
+. g byte diarrhea = (h11 == 2)
+{txt}
+{com}. 
+. * Birth order and breastfeeding
+. clonevar precedBI       = b11
+{txt}(1,150 missing values generated)
+
+{com}. clonevar succeedBI      = b12
+{txt}(2,984 missing values generated)
+
+{com}. clonevar birthOrder = bord
+{txt}
+{com}. clonevar dob            = b3
+{txt}
+{com}. clonevar ageFirstBirth = v212
+{txt}
+{com}. clonevar bfDuration     = m4
+{txt}(11 missing values generated)
+
+{com}. clonevar bfMonths       = m5
+{txt}(11 missing values generated)
+
+{com}. 
+. recode s579 (0 8 = 0 "no")(1 = 1 "yes"), gen(childSick)
+{txt}(2 differences between s579 and childSick)
+
+{com}. clonevar deliveryPlace = m15
+{txt}(1 missing value generated)
+
+{com}. 
+. clonevar birthWgt = m19
+{txt}(3 missing values generated)
+
+{com}. replace birthWgt = . if inlist(birthWgt, 9996, 9998, 9800)
+{txt}(289 real changes made, 289 to missing)
+
+{com}. replace birthWgt = birthWgt / 1000
+{txt}variable {bf}birthWgt{sf} was {bf}{res}int{sf}{txt} now {bf}{res}float{sf}
+{txt}(3,595 real changes made)
+
+{com}. 
+. clonevar birthWgtSource = m19a
+{txt}
+{com}. 
+. * Keep elibigle children
+. g eligChild = 0
+{txt}
+{com}. replace eligChild = 1 if (hw70 < 9996 & hw71 < 9996 & hw72 < 9996)
+{txt}(3,538 real changes made)
+
+{com}. g eligChild2 = 0
+{txt}
+{com}. replace eligChild2 =1 if (hw5 < 9996 & hw6 < 9996 & hw7 < 9996)
+{txt}(3,044 real changes made)
+
+{com}. 
+. * How many children per household?
+. bys caseid: g numChild = _N if eligChild == 1
+{txt}(349 missing values generated)
+
+{com}. 
+. * Mother's bmi
+. g bmitmp = (v445/100)
+{txt}(12 missing values generated)
+
+{com}. egen motherBMI = cut(bmitmp), at(0, 18.5, 25.0, 50) label
+{txt}(12 missing values generated)
+
+{com}. la def bmi 0 "undernourished" 1 "normal" 2 "overweight"
+{txt}
+{com}. la val motherBMI bmi
+{txt}
+{com}. 
+. * Mother's education
+. clonevar motherEd = v106
+{txt}
+{com}. clonevar motherEdYears = v107
+{txt}(545 missing values generated)
+
+{com}. 
+. *************************
+. *** Dietary Diversity ***
+. *************************
+. 
+. d v41*
+
+              {txt}storage   display    value
+variable name   type    format     label      variable label
+{hline}
+{p 0 48}{res}{bind:v410           }{txt}{bind: byte    }{bind:{txt}%8.0g     }{space 1}{bind:V410     }{bind:  }{res}{res}gave child juice{p_end}
+{p 0 48}{bind:v410a          }{txt}{bind: byte    }{bind:{txt}%8.0g     }{space 1}{bind:V410A    }{bind:  }{res}{res}na - gave child tea or coffee{p_end}
+{p 0 48}{bind:v411           }{txt}{bind: byte    }{bind:{txt}%8.0g     }{space 1}{bind:V411     }{bind:  }{res}{res}gave child tinned, powdered or fresh milk{p_end}
+{p 0 48}{bind:v411a          }{txt}{bind: byte    }{bind:{txt}%8.0g     }{space 1}{bind:V411A    }{bind:  }{res}{res}gave child baby formula{p_end}
+{p 0 48}{bind:v412           }{txt}{bind: byte    }{bind:{txt}%8.0g     }{space 1}{bind:V412     }{bind:  }{res}{res}na - gave child fresh milk{p_end}
+{p 0 48}{bind:v412a          }{txt}{bind: byte    }{bind:{txt}%8.0g     }{space 1}{bind:V412A    }{bind:  }{res}{res}gave child fortified baby food (cerelac, etc){p_end}
+{p 0 48}{bind:v412b          }{txt}{bind: byte    }{bind:{txt}%8.0g     }{space 1}{bind:V412B    }{bind:  }{res}{res}na - gave child other porridge/gruel{p_end}
+{p 0 48}{bind:v412c          }{txt}{bind: byte    }{bind:{txt}%8.0g     }{space 1}{bind:V412C    }{bind:  }{res}{res}gave child soup/clear broth{p_end}
+{p 0 48}{bind:v413           }{txt}{bind: byte    }{bind:{txt}%8.0g     }{space 1}{bind:V413     }{bind:  }{res}{res}gave child other liquid{p_end}
+{p 0 48}{bind:v413a          }{txt}{bind: byte    }{bind:{txt}%8.0g     }{space 1}{bind:V413A    }{bind:  }{res}{res}na - gave child cs liquid{p_end}
+{p 0 48}{bind:v413b          }{txt}{bind: byte    }{bind:{txt}%8.0g     }{space 1}{bind:V413B    }{bind:  }{res}{res}na - gave child cs liquid{p_end}
+{p 0 48}{bind:v413c          }{txt}{bind: byte    }{bind:{txt}%8.0g     }{space 1}{bind:V413C    }{bind:  }{res}{res}na - gave child cs liquid{p_end}
+{p 0 48}{bind:v413d          }{txt}{bind: byte    }{bind:{txt}%8.0g     }{space 1}{bind:V413D    }{bind:  }{res}{res}na - gave child cs liquid{p_end}
+{p 0 48}{bind:v414a          }{txt}{bind: byte    }{bind:{txt}%8.0g     }{space 1}{bind:V414A    }{bind:  }{res}{res}na - gave child cs foods{p_end}
+{p 0 48}{bind:v414b          }{txt}{bind: byte    }{bind:{txt}%8.0g     }{space 1}{bind:V414B    }{bind:  }{res}{res}na - gave child cs foods{p_end}
+{p 0 48}{bind:v414c          }{txt}{bind: byte    }{bind:{txt}%8.0g     }{space 1}{bind:V414C    }{bind:  }{res}{res}na - gave child cs foods{p_end}
+{p 0 48}{bind:v414d          }{txt}{bind: byte    }{bind:{txt}%8.0g     }{space 1}{bind:V414D    }{bind:  }{res}{res}na - gave child cs foods{p_end}
+{p 0 48}{bind:v414e          }{txt}{bind: byte    }{bind:{txt}%8.0g     }{space 1}{bind:V414E    }{bind:  }{res}{res}gave child bread, noodles, other made from grains{p_end}
+{p 0 48}{bind:v414f          }{txt}{bind: byte    }{bind:{txt}%8.0g     }{space 1}{bind:V414F    }{bind:  }{res}{res}gave child potatoes, cassava, or other tubers{p_end}
+{p 0 48}{bind:v414g          }{txt}{bind: byte    }{bind:{txt}%8.0g     }{space 1}{bind:V414G    }{bind:  }{res}{res}gave child eggs{p_end}
+{p 0 48}{bind:v414h          }{txt}{bind: byte    }{bind:{txt}%8.0g     }{space 1}{bind:V414H    }{bind:  }{res}{res}gave child meat (beef, pork, lamb, chicken, etc){p_end}
+{p 0 48}{bind:v414i          }{txt}{bind: byte    }{bind:{txt}%8.0g     }{space 1}{bind:V414I    }{bind:  }{res}{res}gave child pumpkin, carrots, squash (yellow or orange inside){p_end}
+{p 0 48}{bind:v414j          }{txt}{bind: byte    }{bind:{txt}%8.0g     }{space 1}{bind:V414J    }{bind:  }{res}{res}gave child any dark green leafy vegetables{p_end}
+{p 0 48}{bind:v414k          }{txt}{bind: byte    }{bind:{txt}%8.0g     }{space 1}{bind:V414K    }{bind:  }{res}{res}gave child mangoes, papayas, other vitamin a fruits{p_end}
+{p 0 48}{bind:v414l          }{txt}{bind: byte    }{bind:{txt}%8.0g     }{space 1}{bind:V414L    }{bind:  }{res}{res}gave child any other fruits{p_end}
+{p 0 48}{bind:v414m          }{txt}{bind: byte    }{bind:{txt}%8.0g     }{space 1}{bind:V414M    }{bind:  }{res}{res}gave child liver, heart, other organs{p_end}
+{p 0 48}{bind:v414n          }{txt}{bind: byte    }{bind:{txt}%8.0g     }{space 1}{bind:V414N    }{bind:  }{res}{res}gave child fish or shellfish{p_end}
+{p 0 48}{bind:v414o          }{txt}{bind: byte    }{bind:{txt}%8.0g     }{space 1}{bind:V414O    }{bind:  }{res}{res}gave child food made from beans, peas, lentils, nuts{p_end}
+{p 0 48}{bind:v414p          }{txt}{bind: byte    }{bind:{txt}%8.0g     }{space 1}{bind:V414P    }{bind:  }{res}{res}gave child cheese, yogurt, other milk products{p_end}
+{p 0 48}{bind:v414q          }{txt}{bind: byte    }{bind:{txt}%8.0g     }{space 1}{bind:V414Q    }{bind:  }{res}{res}na - gave child oil, fats, butter, products made of them{p_end}
+{p 0 48}{bind:v414r          }{txt}{bind: byte    }{bind:{txt}%8.0g     }{space 1}{bind:V414R    }{bind:  }{res}{res}na - gave child chocolates, sweets, candies, pastries, etc{p_end}
+{p 0 48}{bind:v414s          }{txt}{bind: byte    }{bind:{txt}%8.0g     }{space 1}{bind:V414S    }{bind:  }{res}{res}gave child other solid-semisolid food{p_end}
+{p 0 48}{bind:v414t          }{txt}{bind: byte    }{bind:{txt}%8.0g     }{space 1}{bind:V414T    }{bind:  }{res}{res}na - gave child cs foods{p_end}
+{p 0 48}{bind:v414u          }{txt}{bind: byte    }{bind:{txt}%8.0g     }{space 1}{bind:V414U    }{bind:  }{res}{res}na - gave child cs foods{p_end}
+{p 0 48}{bind:v414v          }{txt}{bind: byte    }{bind:{txt}%8.0g     }{space 1}{bind:V414V    }{bind:  }{res}{res}gave child yogurt{p_end}
+{p 0 48}{bind:v414w          }{txt}{bind: byte    }{bind:{txt}%8.0g     }{space 1}{bind:V414W    }{bind:  }{res}{res}na - gave child cs foods{p_end}
+{p 0 48}{bind:v415           }{txt}{bind: byte    }{bind:{txt}%8.0g     }{space 1}{bind:V415     }{bind:  }{res}{res}drank from bottle with nipple yesterday/last night{p_end}
+{p 0 48}{bind:v416           }{txt}{bind: byte    }{bind:{txt}%8.0g     }{space 1}{bind:V416     }{bind:  }{res}{res}heard of oral rehydration{p_end}
+{p 0 48}{bind:v417           }{txt}{bind: byte    }{bind:{txt}%8.0g     }{space 1}{bind:         }{bind:  }{res}{res}entries in maternity table{p_end}
+{p 0 48}{bind:v418           }{txt}{bind: byte    }{bind:{txt}%8.0g     }{space 1}{bind:         }{bind:  }{res}{res}entries in health table{p_end}
+{p 0 48}{bind:v419           }{txt}{bind: byte    }{bind:{txt}%8.0g     }{space 1}{bind:         }{bind:  }{res}{res}entries in height/weight table{p_end}
+{txt}
+{com}. /* NOTES: The recall is only for 24 hours so not sure how reliable
+>                   the metric is. Will calculate but may be misleading.
+>                   */
+. 
+. /* Calculate WDDS
+> The categories are: 1. Starchy staples (WDDS_starch) 
+>                     2. Dark green leafy vegetables (WDDS_veg_green) 
+>                     3. Other Vitamin A rich fruit and veg (WDDS_vitA)
+>                     4. Other fruit and veg (WDDS_veg_other)
+>                     5. Organ meat (WDDS_organ)
+>                     6. Meat and fish (WDDS_meat_fish)
+>                     7. Eggs (WDDS_eggs)
+>                     8. Legumes, nuts, and seeds (WDDS_legumes)  
+>                     9. Milk and milk products (WDDS_dairy)
+> */
+. 
+. * Starch <- v414f, v414e
+. g byte starch = inlist(1, v414f, v414e) if !missing(v414f) | !missing(v414e)
+{txt}(1,640 missing values generated)
+
+{com}. 
+. * Dark green veggies <- v414j
+. g byte vegGreen = inlist(1, v414j) if !missing(v414j)
+{txt}(1,642 missing values generated)
+
+{com}. 
+. * Vitamin A fruit and veg
+. g byte vitA             = inlist(1, v414k, v414i) if !missing(v414k) | !missing(v414i)
+{txt}(1,640 missing values generated)
+
+{com}. 
+. * other fruit and veg
+. g byte othFruit = inlist(1, v414l) if !missing(v414l)
+{txt}(1,640 missing values generated)
+
+{com}. 
+. * Organ meat
+. g byte organ = inlist(1, v414m) if !missing(v414m)
+{txt}(1,643 missing values generated)
+
+{com}. 
+. * fish and meat
+. g byte meat = inlist(1, v414n, v414h) if !missing(v414n) | !missing(v414h)
+{txt}(1,640 missing values generated)
+
+{com}. 
+. * eggs
+. g byte eggs = inlist(1, v414g) if !missing(v414g)
+{txt}(1,641 missing values generated)
+
+{com}. 
+. * Legumes, nuts and seeds
+. g byte legumes = inlist(1, v414o) if !missing(v414o)
+{txt}(1,640 missing values generated)
+
+{com}. 
+. * Milk and related
+. g byte milk = inlist(1, v414p, v411, v414v) if !missing(v414p) | !missing(v411) | !missing(v414v)
+{txt}(1,640 missing values generated)
+
+{com}. 
+. sum starch - milk
+
+{txt}    Variable {c |}        Obs        Mean    Std. Dev.       Min        Max
+{hline 13}{c +}{hline 57}
+{space 6}starch {c |}{res}      2,247    .5220294    .4996257          0          1
+{txt}{space 4}vegGreen {c |}{res}      2,245    .4498886    .4975933          0          1
+{txt}{space 8}vitA {c |}{res}      2,247    .2732532     .445729          0          1
+{txt}{space 4}othFruit {c |}{res}      2,247    .1891411    .3917078          0          1
+{txt}{space 7}organ {c |}{res}      2,244    .0138146    .1167469          0          1
+{txt}{hline 13}{c +}{hline 57}
+{space 8}meat {c |}{res}      2,247    .1197152    .3247004          0          1
+{txt}{space 8}eggs {c |}{res}      2,246    .0284951    .1664195          0          1
+{txt}{space 5}legumes {c |}{res}      2,247    .4886515    .4999825          0          1
+{txt}{space 8}milk {c |}{res}      2,247    .1686693     .374543          0          1
+{txt}
+{com}. * Create dietary diversity
+. egen dietdiv = rowtotal(starch vegGreen vitA othFruit organ meat eggs legumes milk)
+{txt}
+{com}. 
+. * Keep subset of variables
+. #delimit ;
+{txt}delimiter now ;
+{com}. ds(stunting stunting2 stunted stunted2 ageChild 
+>         age_group female ageg_stunting age_stunting 
+>         religion diarrhea precedBI succeedBI 
+>         birthOrder dob ageFirstBirth bfDuration 
+>         bfMonths childSick deliveryPlace birthWgt 
+>         birthWgtSource v001 v002 eligChild
+>         ageMonGroup starch vegGreen vitA 
+>         othFruit organ meat eggs legumes milk
+>         dietdiv bmitmp motherBMI motherEd 
+>         motherEdYears DHSCLUST);
+{txt}{col 1}stunting{col 15}stunted2{col 29}female{col 43}religion{col 57}succeedBI{col 71}ageFirstBi~h{col 85}childSick{col 99}birthWgtSo~e{col 113}eligChild{col 127}vegGreen{col 141}organ{col 155}legumes{col 169}bmitmp{col 183}motherEdYe~s
+{col 1}stunting2{col 15}ageChild{col 29}ageg_stunt~g{col 43}diarrhea{col 57}birthOrder{col 71}bfDuration{col 85}deliveryPl~e{col 99}v001{col 113}ageMonGroup{col 127}vitA{col 141}meat{col 155}milk{col 169}motherBMI{col 183}DHSCLUST
+{col 1}stunted{col 15}age_group{col 29}age_stunting{col 43}precedBI{col 57}dob{col 71}bfMonths{col 85}birthWgt{col 99}v002{col 113}starch{col 127}othFruit{col 141}eggs{col 155}dietdiv{col 169}motherEd
+
+{com}. #delimit cr
+{txt}delimiter now cr
+{com}. keep `r(varlist)'
+{txt}
+{com}. 
+. compress
+  {txt}variable {bf}ageMonGroup{sf} was {bf}{res}float{sf}{txt} now {bf}{res}byte{sf}
+  {txt}variable {bf}eligChild{sf} was {bf}{res}float{sf}{txt} now {bf}{res}byte{sf}
+  {txt}variable {bf}motherBMI{sf} was {bf}{res}float{sf}{txt} now {bf}{res}byte{sf}
+  {txt}variable {bf}dietdiv{sf} was {bf}{res}float{sf}{txt} now {bf}{res}byte{sf}
+{txt}  (46,644 bytes saved)
+
+{com}. saveold "$pathout/DHS_child.dta", replace
+{txt}(saving in Stata 13 format)
+{p 0 6 2}
+(FYI, {bf:saveold} has options
+{bf:version(12)} and {bf:version(11)} that
+write files in older Stata formats)
+{p_end}
+file C:\Users\Tim\Documents\Github\RwandaLAM/Dataout/DHS_child.dta saved
+
+{com}. 
+. * Merge in household information
+. merge m:1 v001 v002 using "$pathout/DHS_hhvar.dta"
+{res}
+{txt}{col 5}Result{col 38}# of obs.
+{col 5}{hline 41}
+{col 5}not matched{col 30}{res}           9,825
+{txt}{col 9}from master{col 30}{res}               0{txt}  (_merge==1)
+{col 9}from using{col 30}{res}           9,825{txt}  (_merge==2)
+
+{col 5}matched{col 30}{res}           3,887{txt}  (_merge==3)
+{col 5}{hline 41}
+
+{com}. 
+{txt}end of do-file
+
+{com}. ren DHSCLUST
+{res}{err}syntax error
+    Syntax is
+        {bf:rename}  {it:oldname}    {it:newname}   [{bf:, renumber}[{bf:(}{it:#}{bf:)}] {bf:addnumber}[{bf:(}{it:#}{bf:)}] {bf:sort} ...]
+        {bf:rename (}{it:oldnames}{bf:) (}{it:newnames}{bf:)} [{bf:, renumber}[{bf:(}{it:#}{bf:)}] {bf:addnumber}[{bf:(}{it:#}{bf:)}] {bf:sort} ...]
+        {bf:rename}  {it:oldnames}              {bf:,} {{bf:upper}|{bf:lower}|{bf:proper}}
+{txt}{search r(198), local:r(198);}
+
+{com}. ren DHSCLUST, lower
+{res}
+{com}. dir
+{txt}  <dir>   8/09/16 14:00  {res}.                 
+{txt}  <dir>   8/09/16 14:00  {res}..                
+{txt}  <dir>   7/29/16 12:25  {res}.git              
+{txt}   0.7k   7/29/16 11:54  {res}.gitignore        
+{txt}   0.0k   8/09/16 14:00  {res}02_stunting.smcl  
+{txt}  <dir>   8/08/16 14:28  {res}Datain            
+{txt}  <dir>   8/09/16 14:00  {res}Dataout           
+{txt}  <dir>   7/29/16 11:30  {res}Documents         
+{txt}  <dir>   7/29/16 11:30  {res}Excel             
+{txt}  <dir>   7/29/16 11:30  {res}GIS               
+{txt}   1.1k   7/08/16 13:44  {res}LICENSE           
+{txt}  <dir>   7/08/16 13:44  {res}Plots             
+{txt}  <dir>   7/29/16 11:30  {res}R                 
+{txt}  <dir>   7/08/16 13:44  {res}Rawdata           
+{txt}   0.3k   7/08/16 13:44  {res}README.md         
+{txt}  <dir>   7/08/16 13:44  {res}Sensitive_Data    
+{txt}  <dir>   8/09/16 13:58  {res}Stata             
+{txt}   8.9k   7/29/16 11:30  {res}Stunting-ML.R     
+{txt}   0.0k   7/08/16 13:44  {res}tmp.txt           
+{txt}   0.4k   7/29/16 11:30  {res}water_source_codes.csv
+
+{com}. cd $pathout
+{res}C:\Users\Tim\Documents\Github\RwandaLAM\Dataout
+
+{com}. dir
+{txt}  <dir>   8/09/16 14:00  {res}.                 
+{txt}  <dir>   8/09/16 14:00  {res}..                
+{txt} 250.0k   8/09/16 14:00  {res}DHS_child.dta     
+{txt}1458.6k   8/04/16 16:29  {res}DHS_hhvar.dta     
+{txt} 170.1k   8/09/16 13:10  {res}RWA_DHS_Livelihoods.csv
+{txt} 149.0k   8/09/16 13:58  {res}RWA_DHS_Livelihoods.dta
+{txt}5565.1k   8/08/16 14:28  {res}stuntingAnalysis.csv
+{txt}2418.8k   8/08/16 14:28  {res}stuntingAnalysis.dta
+
+{com}. merge m:1 dhsclust using "$pathout/RWA_DHS_Livelihoods.dta", gen(_merge3)
+{res}
+{txt}{col 5}Result{col 38}# of obs.
+{col 5}{hline 41}
+{col 5}not matched{col 30}{res}           9,825
+{txt}{col 9}from master{col 30}{res}           9,825{txt}  (_merge3==1)
+{col 9}from using{col 30}{res}               0{txt}  (_merge3==2)
+
+{col 5}matched{col 30}{res}           3,887{txt}  (_merge3==3)
+{col 5}{hline 41}
+
+{com}. svy:mean stunted2, over(lvhood_zone)
+{err}data not set up for svy, use {helpb svyset##|_new:svyset}
+{txt}{search r(119), local:r(119);}
+
+{com}. do "C:\Users\Tim\AppData\Local\Temp\STD02000000.tmp"
+{txt}
+{com}. /*-------------------------------------------------------------------------------
+> # Name:         03_stunting
+> # Purpose:      Create stunting variables and dietary diversity variables
+> # Author:       Tim Essam, Ph.D.
+> # Created:      2016/08/01
+> # Owner:        USAID GeoCenter | OakStream Systems, LLC
+> # License:      MIT License
+> # Ado(s):       see below
+> #-------------------------------------------------------------------------------
+> */
+. 
+. 
+. clear
+{txt}
+{com}. capture log close
+{smcl}
+{com}{sf}{ul off}
