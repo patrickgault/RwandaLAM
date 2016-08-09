@@ -26,3 +26,5 @@ library(llamar)
 
 # Import in the raw data --------------------------------------------------
 hh = read_sav(paste0(baseDir, 'cs_s0_s5_household.sav'))
+
+indiv = read_sav(paste0(baseDir, 'cs_s1_s2_s3_s4_s6a_s6e_s6f_person.sav'))
